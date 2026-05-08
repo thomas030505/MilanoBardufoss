@@ -121,7 +121,7 @@ export default function AboutPage() {
                 <Link href="/bestill">Bestill hentemat</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-border">
-                <Link href="/meny">Se menyen</Link>
+                <Link href="/kontakt">Kontakt oss</Link>
               </Button>
             </div>
           </div>

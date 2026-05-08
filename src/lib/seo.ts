@@ -73,7 +73,7 @@ export function restaurantJsonLd(r: Restaurant) {
         closes: h.closesAt,
       })),
     acceptsReservations: false,
-    hasMenu: `${SITE_URL}/meny`,
+    hasMenu: `${SITE_URL}/bestill`,
     sameAs: r.googleReviewUrl ? [r.googleReviewUrl] : undefined,
   };
 }
