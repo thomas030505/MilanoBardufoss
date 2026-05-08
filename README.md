@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Milano Bardufoss — nettside
 
-## Getting Started
+Next.js 15 + Tailwind v4 + shadcn/ui. Integrert med [LettBestilt](https://lettbestilt.no) v1 API for nettbestilling. Pickup-only.
 
-First, run the development server:
+## Lokal utvikling
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Åpne [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Env-variabler
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Var | Verdi | Hvor |
+|---|---|---|
+| `NEXT_PUBLIC_LETTBESTILT_URL` | `https://lettbestilt.no` | klient + server |
+| `NEXT_PUBLIC_SLUG` | `milano` | klient + server |
+| `NEXT_PUBLIC_SITE_URL` | `https://milanobardufoss.no` | klient + server (SEO/canonical) |
+| `NEXT_PUBLIC_STRIPE_ENABLED` | `true` eller `false` | klient |
+| `LETTBESTILT_API_KEY` | (valgfritt) | server only — kun fallback |
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+1. Push til GitHub
+2. Importer i Vercel — sett alle `NEXT_PUBLIC_*`-vars
+3. Pek `milanobardufoss.no` (CNAME) på Vercel
+4. **Tace IT må:** legge `https://milanobardufoss.no` + `https://www.milanobardufoss.no` i LettBestilts `PUBLIC_API_ALLOWED_ORIGINS`-env-variabel — uten dette feiler nettbestilling fra browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Struktur
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/                     # Sider (App Router)
+│   ├── page.tsx             # Forsiden
+│   ├── bestill/             # Order flow
+│   ├── meny/                # Lese-meny
+│   ├── om-oss/
+│   ├── kontakt/
+│   ├── order/[token]/       # Redirect til lettbestilt.no/order/...
+│   ├── layout.tsx           # Header + Footer + fonts + metadata
+│   ├── globals.css          # Brand tokens (cream/basil/tomato/...)
+│   ├── sitemap.ts
+│   └── robots.ts
+├── components/
+│   ├── layout/              # Header, Footer
+│   ├── home/                # Hero, USPs, PopularDishes, AboutTeaser, ReviewsSlider, LocationBlock
+│   ├── order/               # OrderClient, ProductCard, ProductDialog, CartSheet, CheckoutForm
+│   └── ui/                  # shadcn primitives
+├── lib/
+│   ├── lettbestilt.ts       # API-klient + typer
+│   ├── money.ts             # formatMoney
+│   ├── opening-hours.ts     # isRestaurantOpen, formatOpeningHoursTable
+│   └── seo.ts               # JSON-LD Restaurant schema
+└── store/
+    └── cart.ts              # Zustand handlekurv (persisted)
+```
 
-## Deploy on Vercel
+## Endre tekst og farger
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Forsiden / om-oss / kontakt copy** — direkte i `src/app/<rute>/page.tsx` eller komponentene under `src/components/home/`
+- **Reviews** — `src/components/home/ReviewsSlider.tsx` (`REVIEWS`-array)
+- **Brand-farger og typografi** — `src/app/globals.css`
+- **Logo, venue-bilder** — bytt ut filene under `public/`
+- **SEO-metadata** — `src/app/layout.tsx` (default) og hver `page.tsx` har eget `metadata`-export
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Bygg og test
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```
+
+Test bestillingsflyten end-to-end mot live API før deploy.
+
+---
+
+Built av Tace IT 🍕
