@@ -1,6 +1,6 @@
 import type { Restaurant } from "./lettbestilt";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://milanobardufoss.no";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.milanobardufoss.no";
 
 const JSON_LD_ESCAPE = new RegExp("[<>&\\u2028\\u2029]", "g");
 

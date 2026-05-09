@@ -20,7 +20,7 @@ const inter = Inter({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://milanobardufoss.no";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.milanobardufoss.no";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
