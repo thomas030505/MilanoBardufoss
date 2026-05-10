@@ -11,7 +11,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, Clock, Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/money";
@@ -68,6 +67,12 @@ export function CheckoutForm({
     () => getPickupTimeSlots(openingHours, hoursOverrides, prepMinutes),
     [openingHours, hoursOverrides, prepMinutes]
   );
+
+  const pickupLabel = useMemo(() => {
+    if (pickupTime === "ASAP") return `Så fort som mulig (ca. ${prepMinutes} min)`;
+    const slot = pickupSlots.find((s) => s.value === pickupTime);
+    return slot ? `Kl. ${slot.label}` : `Så fort som mulig (ca. ${prepMinutes} min)`;
+  }, [pickupTime, pickupSlots, prepMinutes]);
 
   const total = subtotal - couponDiscount;
   const formValid =
@@ -268,9 +273,9 @@ export function CheckoutForm({
                 id="pickup-time"
                 className="w-full h-11 rounded-lg border-input bg-card data-[size=default]:h-11"
               >
-                <span className="inline-flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-secondary" />
-                  <SelectValue />
+                <span className="inline-flex items-center gap-2 flex-1 text-left">
+                  <Clock className="h-4 w-4 shrink-0 text-secondary" />
+                  <span className="truncate">{pickupLabel}</span>
                 </span>
               </SelectTrigger>
               <SelectContent className="max-h-72">
