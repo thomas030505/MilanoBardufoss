@@ -101,15 +101,10 @@ export default async function OrderTrackingPage({
     ? new Date(etaSource).toLocaleTimeString("nb-NO", {
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "Europe/Oslo",
       })
     : null;
-  const etaLabel = order.requestedPickupAt
-    ? isReady
-      ? "Klar fra"
-      : "Henting"
-    : isReady
-    ? "Klar fra"
-    : "Klar ca.";
+  const etaLabel = isReady ? "Klar fra" : "Klar ca.";
 
   const toneClasses: Record<Tone, { bg: string; ring: string; text: string; dot: string; gradient: string }> = {
     primary: {
