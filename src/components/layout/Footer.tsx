@@ -26,7 +26,7 @@ export async function Footer() {
             className="h-12 w-auto"
           />
           <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-            Pizza, grill og kebab — laget fra bunnen av i hjertet av Bardufoss.
+            Pizza, grill og kebab i Rustahøgdveien 16, Bardufoss.
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export async function Footer() {
               <li>Hver dag 13–22</li>
             )}
             <li className="text-xs text-muted-foreground/70 pt-2">
-              Nettbestilling stenger kl. 21
+              Nettbestillingen stenger kl. 21.
             </li>
           </ul>
         </div>

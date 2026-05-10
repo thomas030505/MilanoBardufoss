@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s | Milano Bardufoss",
   },
   description:
-    "Hos Milano Bardufoss serverer vi maten slik den skal smake: rykende fersk og av høy kvalitet. Bestill på nett, så står maten klar når du kommer innom.",
+    "Pizza, grill og kebab fra Milano Bardufoss. Bestill på nett og hent når det passer deg — Rustahøgdveien 16, åpent hver dag 13–22.",
   openGraph: {
     type: "website",
     locale: "nb_NO",

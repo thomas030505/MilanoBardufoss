@@ -25,7 +25,7 @@ export default async function OrderPage() {
   const closedReason = !status.isOpen
     ? status.nextOpenLabel ?? "Vi har stengt akkurat nå."
     : !orderingOpen
-    ? "Nettbestilling er stengt — kjøkkenet stenger for nye bestillinger 1 time før vi stenger."
+    ? "Nettbestillingen er stengt — vi tar imot nye bestillinger fram til én time før stengetid."
     : null;
 
   const primaryLocation = data.restaurant.locations[0];
@@ -59,11 +59,11 @@ export default async function OrderPage() {
             </p>
           </div>
           <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground text-balance max-w-3xl">
-            Bestill nå — vi har den klar når du kommer.
+            Bestill henting fra Milano
           </h1>
           <p className="mt-3 text-muted-foreground max-w-2xl">
-            Velg fra menyen nedenfor. Vi bekrefter bestillingen på e-post og lager den
-            slik du liker den.
+            Velg fra menyen under. Du får bekreftelse på e-post, og vi lager maten klar til
+            avtalt tid.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {orderingOpen ? (

@@ -5,24 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Leaf, Clock, Heart } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Om oss — Ekte mat. Ingen snarveier.",
+  title: "Om oss — Milano Bardufoss",
   description:
-    "Milano Bardufoss er en lokal favoritt — pizza fra steinovn, mør biff og porsjoner som metter. Les om hvorfor vi gjør ting på vår måte.",
+    "Milano Bardufoss serverer pizza, grillmat og kebab i Rustahøgdveien 16. Les mer om stedet, åpningstider og henting.",
   alternates: { canonical: "/om-oss" },
 };
 
 const PROMISES = [
   {
     icon: Leaf,
-    title: "Råvarene i fokus",
+    title: "Gode råvarer",
     body:
-      "En Margherita trenger bare tre ingredienser, men da må de være gode. Det merker du på smaken.",
+      "En Margherita har bare tre ingredienser, så de må være bra. Det smaker du.",
   },
   {
     icon: Clock,
-    title: "Alltid i rute",
+    title: "Klar når vi har sagt",
     body:
-      "Vi vet at du har ting du skal rekke. Bestiller du henting, gjør vi vårt ytterste for at maten står klar nøyaktig når vi har lovet.",
+      "Bestiller du henting, står maten klar på avtalt tid. Vi vet du har andre ting å rekke.",
   },
   {
     icon: Heart,
@@ -51,7 +51,7 @@ export default function AboutPage() {
               Om Milano Bardufoss
             </p>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-balance max-w-3xl">
-              Ekte mat. Ingen snarveier.
+              Pizza, grill og kebab i Bardufoss.
             </h1>
           </div>
         </div>
@@ -60,10 +60,9 @@ export default function AboutPage() {
       <section className="py-16 sm:py-24">
         <div className="container-page max-w-3xl">
           <p className="text-xl sm:text-2xl text-foreground/90 leading-relaxed text-balance">
-            Milano er mer enn bare et spisested; det er en del av hverdagen her i Bardufoss. Vi
-            har holdt på lenge nok til å vite at kvalitet ikke trenger å være komplisert.
-            Pizzaen skal smake av steinovn, biffen skal være mør, og porsjonen skal mette en
-            sulten soldat.
+            Milano er et fast stopp for mange her i Bardufoss. Vi har holdt på lenge nok til å
+            vite at det ikke trenger å være komplisert: pizzaen skal være god, biffen skal
+            være mør, og porsjonen skal være stor nok til å mette etter en lang dag.
           </p>
         </div>
       </section>
@@ -71,10 +70,10 @@ export default function AboutPage() {
       <section className="py-16 sm:py-20 bg-stone-100/60">
         <div className="container-page">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent mb-3">
-            Våre løfter til deg
+            Slik jobber vi
           </p>
           <h2 className="font-display text-4xl sm:text-5xl text-foreground mb-12 text-balance max-w-2xl">
-            Tre ting vi aldri tukler med.
+            Tre ting som er viktig for oss.
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             {PROMISES.map(({ icon: Icon, title, body }) => (
@@ -106,19 +105,18 @@ export default function AboutPage() {
           </div>
           <div>
             <h2 className="font-display text-4xl sm:text-5xl text-foreground mb-5 text-balance">
-              Velkommen innom — eller bestill og hent.
+              Stikk innom — eller bestill og hent.
             </h2>
             <p className="text-foreground/80 leading-relaxed mb-4">
-              Du finner oss i Rustahøgdveien 16, fem minutter fra sentrum. Kom for en hyggelig
-              matopplevelse, eller ta med festmåltidet hjem.
+              Du finner oss i Rustahøgdveien 16, fem minutter fra sentrum. Sett deg ned hos
+              oss, eller ta maten med hjem.
             </p>
             <p className="text-foreground/80 leading-relaxed mb-7">
-              Vi tar alltid imot store bestillinger til jobben, bursdagen eller turen. Ring oss
-              gjerne så finner vi en løsning sammen.
+              Skal du bestille til jobben, bursdagen eller turen? Ring oss, så ordner vi det.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <Link href="/bestill">Bestill hentemat</Link>
+                <Link href="/bestill">Bestill henting</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-border">
                 <Link href="/kontakt">Kontakt oss</Link>

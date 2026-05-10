@@ -34,7 +34,7 @@ export function Gallery() {
               </p>
             </div>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-cream text-balance">
-              Nydelig mat, servert rykende fersk.
+              Rett fra kjøkkenet vårt.
             </h2>
             <p className="mt-4 text-cream/70 max-w-xl">
               Bilder fra vårt eget kjøkken. Kom innom og se med dine egne øyne!

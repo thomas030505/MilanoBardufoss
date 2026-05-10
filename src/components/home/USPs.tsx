@@ -4,21 +4,21 @@ import { Reveal } from "@/components/Reveal";
 const USPS = [
   {
     icon: ChefHat,
-    title: "Det beste fra to verdener",
+    title: "Pizza, grill og kebab — alt på ett sted",
     body:
-      "Vi kombinerer italiensk tradisjon med norske favoritter. Enten du vil ha en deilig pizza eller saftig biffsnadder, så lager vi det fra bunnen av.",
+      "Italiensk pizza ved siden av biffsnadder, kebab og burgere. Vi lager alt du kan tenke deg, så du finner noe alle blir fornøyde med.",
   },
   {
     icon: UtensilsCrossed,
-    title: "Porsjoner som metter",
+    title: "Porsjoner du blir mett av",
     body:
-      "Vi sparer ikke på råvarene. Det gjestene våre nevner oftest, er at du får mye god mat for pengene.",
+      "Du får mye mat for pengene — det er det gjestene oftest nevner. Vi vil at du skal gå derfra mett, ikke skuffet.",
   },
   {
     icon: Users,
-    title: "Plass til hele familien",
+    title: "Et sted for hele familien",
     body:
-      "Her er alle velkomne, ta med hele familien — alt fra unge til gamle.",
+      "Barnestolen står klar, menyen har noe for alle aldre, og vi tar oss tid til å hjelpe hvis du er usikker.",
   },
 ];
 
@@ -31,7 +31,7 @@ export function USPs() {
             Hvorfor velge Milano?
           </p>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground text-balance">
-            Ærlig mat. Ingen snarveier.
+            Mat folk kommer tilbake for.
           </h2>
         </Reveal>
         <div className="grid md:grid-cols-3 gap-5 sm:gap-6">

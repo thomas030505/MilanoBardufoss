@@ -40,8 +40,8 @@ export function Hero({ openLabel }: { openLabel: string | null }) {
         </p>
 
         <p className="text-base sm:text-lg lg:text-xl text-white/90 text-balance leading-relaxed max-w-xl">
-          Rykende fersk og av høy kvalitet. Bestill på nett, så står maten klar når du kommer
-          innom.
+          Pizza, grill og kebab — laget når du bestiller. Bestill på nett og hent når det
+          passer deg.
         </p>
 
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center pt-2 w-full sm:w-auto">
@@ -50,7 +50,7 @@ export function Hero({ openLabel }: { openLabel: string | null }) {
             size="lg"
             className="text-base px-8 h-13 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30 motion-safe:active:scale-[0.97] motion-safe:transition-transform"
           >
-            <Link href="/bestill">Bestill her →</Link>
+            <Link href="/bestill">Bestill henting</Link>
           </Button>
         </div>
       </div>

@@ -19,12 +19,11 @@ export function PopularDishes({ products }: { products: Product[] }) {
               </p>
             </div>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground text-balance">
-              Stort utvalg, samme kjærlighet til faget.
+              Et godt utvalg — uansett hva du er sugen på.
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl">
-              Vi har noe for enhver sult. Velg mellom alt fra en klassisk Margherita til vår
-              egen Heggelia spesial. Er du mer i humør for kjøtt? Prøv indrefileten vår med
-              peppersaus eller en klassisk kebab i pitabrød.
+              Klassisk Margherita, vår egen Heggelia spesial, mør indrefilet med peppersaus
+              eller kebab i pitabrød — du finner hele menyen på bestillingssiden.
             </p>
           </div>
           <Button asChild variant="outline" className="border-foreground/20 motion-safe:active:scale-[0.97] motion-safe:transition-transform">

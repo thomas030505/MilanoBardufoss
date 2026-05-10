@@ -24,22 +24,22 @@ export function AboutTeaser() {
             En lokal favoritt rett ved veien.
           </h2>
           <p className="text-foreground/80 leading-relaxed mb-4">
-            Du finner oss i Rustahøgdveien 16, bare fem minutter fra sentrum. Vi brenner for
-            ærlig mat, høy kvalitet og gode omgivelser. Det er ikke uten grunn at vi får skryt
-            for pizzaen vår — eller som <em>Bergs</em> anmeldelse sier det:
+            Du finner oss i Rustahøgdveien 16, fem minutter fra sentrum. Vi lager pizza,
+            grillmat og kebab fra bunnen — og pizzaen er det folk oftest skryter av. Som{" "}
+            <em>Berg</em> skrev i en anmeldelse:
           </p>
           <blockquote className="border-l-4 border-primary pl-4 my-6 font-display text-2xl text-foreground italic text-balance">
             {"«Best pizza I've got in this world.»"}
           </blockquote>
           <p className="text-foreground/80 leading-relaxed mb-7">
-            Kom innom for en hyggelig matopplevelse eller ta med festmåltidet hjem.
+            Sett deg ned hos oss, eller bestill og ta med hjem.
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <Button asChild size="lg" className="motion-safe:active:scale-[0.97] motion-safe:transition-transform">
               <Link href="/om-oss">Les hele historien</Link>
             </Button>
             <Button asChild size="lg" variant="ghost" className="text-foreground">
-              <Link href="/bestill">Bestill maten →</Link>
+              <Link href="/bestill">Bestill henting →</Link>
             </Button>
           </div>
         </Reveal>

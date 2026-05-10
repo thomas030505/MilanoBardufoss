@@ -21,7 +21,7 @@ const PICKUP_STEPS: Step[] = [
   { key: "CONFIRMED", label: "Bekreftet", sublabel: "Kjøkkenet starter snart", icon: ClipboardCheck },
   { key: "PREPARING", label: "Tilberedes", sublabel: "Maten lages nå", icon: ChefHat },
   { key: "READY_FOR_PICKUP", label: "Klar", sublabel: "Hent når du kan", icon: PackageCheck },
-  { key: "COMPLETED", label: "Hentet", sublabel: "Takk – nyt maten!", icon: CheckCircle2 },
+  { key: "COMPLETED", label: "Hentet", sublabel: "Takk for bestillingen!", icon: CheckCircle2 },
 ];
 
 const DELIVERY_STEPS: Step[] = [
@@ -29,7 +29,7 @@ const DELIVERY_STEPS: Step[] = [
   { key: "CONFIRMED", label: "Bekreftet", sublabel: "Kjøkkenet starter snart", icon: ClipboardCheck },
   { key: "PREPARING", label: "Tilberedes", sublabel: "Maten lages nå", icon: ChefHat },
   { key: "OUT_FOR_DELIVERY", label: "Underveis", sublabel: "Sjåføren er på vei", icon: Truck },
-  { key: "COMPLETED", label: "Levert", sublabel: "Takk – nyt maten!", icon: CheckCircle2 },
+  { key: "COMPLETED", label: "Levert", sublabel: "Takk for bestillingen!", icon: CheckCircle2 },
 ];
 
 const PAYMENT_STEP: Step = {
