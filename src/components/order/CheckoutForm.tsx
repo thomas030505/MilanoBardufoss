@@ -1,20 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronLeft, Clock, Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { useCart } from "@/store/cart";
 import {
   placeOrder,
   validateCoupon,
   type CreateOrderInput,
+  type HoursOverride,
   type Location,
+  type OpeningHour,
 } from "@/lib/lettbestilt";
+import { getPickupTimeSlots } from "@/lib/opening-hours";
 import { toast } from "sonner";
 
 const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
@@ -23,10 +33,16 @@ export function CheckoutForm({
   onBack,
   onClose,
   locations,
+  openingHours,
+  hoursOverrides,
+  prepMinutes,
 }: {
   onBack: () => void;
   onClose: () => void;
   locations: Location[];
+  openingHours: OpeningHour[];
+  hoursOverrides: HoursOverride[];
+  prepMinutes: number;
 }) {
   const lines = useCart((s) => s.lines);
   const subtotal = useCart((s) => s.subtotal());
@@ -46,6 +62,12 @@ export function CheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [consent, setConsent] = useState(false);
   const [locationId, setLocationId] = useState<string>(locations[0]?.id ?? "");
+  const [pickupTime, setPickupTime] = useState<string>("ASAP");
+
+  const pickupSlots = useMemo(
+    () => getPickupTimeSlots(openingHours, hoursOverrides, prepMinutes),
+    [openingHours, hoursOverrides, prepMinutes]
+  );
 
   const total = subtotal - couponDiscount;
   const formValid =
@@ -97,6 +119,7 @@ export function CheckoutForm({
         customerEmail: email.trim(),
         customerPhone: phone.trim() || undefined,
         pickupNotes: pickupNotes.trim() || undefined,
+        requestedPickupAt: pickupTime !== "ASAP" ? pickupTime : undefined,
         couponCode: couponDiscount > 0 ? couponCode.trim().toUpperCase() : undefined,
         paymentMethod,
         locale: "nb",
@@ -236,12 +259,43 @@ export function CheckoutForm({
               Vi tar bare henting akkurat nå.
             </p>
           )}
+          <div className="mb-3">
+            <Label htmlFor="pickup-time" className="mb-1.5 block">
+              Når vil du hente?
+            </Label>
+            <Select value={pickupTime} onValueChange={(v) => setPickupTime(v ?? "ASAP")}>
+              <SelectTrigger
+                id="pickup-time"
+                className="w-full h-11 rounded-lg border-input bg-card data-[size=default]:h-11"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-secondary" />
+                  <SelectValue />
+                </span>
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="ASAP">
+                  Så fort som mulig (ca. {prepMinutes} min)
+                </SelectItem>
+                {pickupSlots.map((slot) => (
+                  <SelectItem key={slot.value} value={slot.value}>
+                    Kl. {slot.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {pickupSlots.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Vi setter i gang så fort som mulig.
+              </p>
+            )}
+          </div>
           <Label htmlFor="pickup-notes">Kommentar (valgfritt)</Label>
           <Textarea
             id="pickup-notes"
             value={pickupNotes}
             onChange={(e) => setPickupNotes(e.target.value)}
-            placeholder="F.eks. ønsket henteid, allergier …"
+            placeholder="F.eks. allergier, parkering …"
             rows={2}
             maxLength={500}
           />

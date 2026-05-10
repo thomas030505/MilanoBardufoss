@@ -96,6 +96,9 @@ export function OrderClient({
         orderingOpen={orderingOpen}
         closedReason={closedReason}
         locations={data.restaurant.locations}
+        openingHours={data.restaurant.openingHours}
+        hoursOverrides={data.restaurant.hoursOverrides}
+        prepMinutes={data.restaurant.defaultPrepMinutes}
       />
     </>
   );

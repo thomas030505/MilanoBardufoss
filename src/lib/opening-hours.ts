@@ -127,3 +127,47 @@ export function isOrderingOpen(
   const close = hhmmToMinutes(status.closesAt);
   return minutes < close - cutoffMinutesBeforeClose;
 }
+
+export type PickupSlot = { value: string; label: string };
+
+/**
+ * Generate selectable pickup time slots from today's opening hours, accounting
+ * for prep time. Slots are spaced `intervalMin` apart, start at the next
+ * interval boundary after (now + prepMinutes), and end `cutoffMinutesBeforeClose`
+ * before kitchen close. Returns an empty list if the kitchen is closed for orders.
+ */
+export function getPickupTimeSlots(
+  hours: OpeningHour[],
+  overrides: HoursOverride[],
+  prepMinutes: number,
+  now: Date = new Date(),
+  opts: { intervalMin?: number; cutoffMinutesBeforeClose?: number } = {}
+): PickupSlot[] {
+  const intervalMin = opts.intervalMin ?? 15;
+  const cutoff = opts.cutoffMinutesBeforeClose ?? 60;
+  const status = getRestaurantStatus(hours, overrides, now);
+  if (!status.isOpen || !status.closesAt) return [];
+
+  const { iso, minutes: nowMin } = osloParts(now);
+  const closeMin = hhmmToMinutes(status.closesAt);
+  const lastMin = closeMin - cutoff;
+  const earliest = nowMin + Math.max(0, prepMinutes);
+  const firstMin = Math.ceil(earliest / intervalMin) * intervalMin;
+  if (firstMin > lastMin) return [];
+
+  // Compute Oslo's current offset from UTC in ms so we can convert
+  // any target Oslo wall time today into a UTC ISO string.
+  const nowHH = String(Math.floor(nowMin / 60)).padStart(2, "0");
+  const nowMM = String(nowMin % 60).padStart(2, "0");
+  const osloOffsetMs =
+    Date.parse(`${iso}T${nowHH}:${nowMM}:00Z`) - now.getTime();
+
+  const slots: PickupSlot[] = [];
+  for (let m = firstMin; m <= lastMin; m += intervalMin) {
+    const hh = String(Math.floor(m / 60)).padStart(2, "0");
+    const mm = String(m % 60).padStart(2, "0");
+    const utcMs = Date.parse(`${iso}T${hh}:${mm}:00Z`) - osloOffsetMs;
+    slots.push({ value: new Date(utcMs).toISOString(), label: `${hh}:${mm}` });
+  }
+  return slots;
+}
