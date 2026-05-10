@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Category, Product, Restaurant } from "@/lib/lettbestilt";
+import type { Allergen, Category, Product, Restaurant } from "@/lib/lettbestilt";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { Flame, Leaf, Plus, Sparkles } from "lucide-react";
@@ -16,10 +16,12 @@ export function ProductCard({
   product,
   category,
   restaurant,
+  allergens,
 }: {
   product: Product;
   category: Category;
   restaurant: Restaurant;
+  allergens: Allergen[];
 }) {
   const [open, setOpen] = useState(false);
   const hasBadge =
@@ -109,6 +111,7 @@ export function ProductCard({
         product={product}
         category={category}
         restaurant={restaurant}
+        allergens={allergens}
         open={open}
         onOpenChange={setOpen}
       />

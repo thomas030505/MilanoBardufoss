@@ -14,7 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Minus, Plus } from "lucide-react";
 import {
+  buildAllergenIndex,
   resolveAddonGroups,
+  type Allergen,
   type Category,
   type Product,
   type Restaurant,
@@ -27,12 +29,14 @@ export function ProductDialog({
   product,
   category,
   restaurant,
+  allergens,
   open,
   onOpenChange,
 }: {
   product: Product;
   category: Category;
   restaurant: Restaurant;
+  allergens: Allergen[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -40,6 +44,13 @@ export function ProductDialog({
     () => resolveAddonGroups(product, category, restaurant),
     [product, category, restaurant]
   );
+  const productAllergens = useMemo(() => {
+    const { byCode } = buildAllergenIndex(allergens);
+    return product.allergens
+      .map((code) => byCode.get(code))
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
+      .sort((a, b) => a.number - b.number);
+  }, [allergens, product.allergens]);
   const defaultVariant =
     product.variants.find((v) => v.isDefault) ?? product.variants[0];
 
@@ -126,6 +137,27 @@ export function ProductDialog({
               </DialogDescription>
             )}
           </DialogHeader>
+
+          {productAllergens.length > 0 && (
+            <div>
+              <Label className="text-sm font-semibold mb-2 block">
+                Inneholder allergener
+              </Label>
+              <ul className="flex flex-wrap gap-1.5">
+                {productAllergens.map(({ number, allergen }) => (
+                  <li
+                    key={allergen.code}
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-card px-2 py-1"
+                  >
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-sm bg-secondary/10 text-secondary text-[11px] font-semibold tabular-nums">
+                      {number}
+                    </span>
+                    <span className="text-xs text-foreground">{allergen.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {product.variants.length > 0 && (
             <div>

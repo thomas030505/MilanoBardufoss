@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { MenuResponse } from "@/lib/lettbestilt";
 import { ProductCard } from "./ProductCard";
 import { CartSheet } from "./CartSheet";
+import { AllergenLegend } from "./AllergenLegend";
 
 export function OrderClient({
   data,
@@ -84,12 +85,15 @@ export function OrderClient({
                     product={p}
                     category={c}
                     restaurant={data.restaurant}
+                    allergens={data.allergens}
                   />
                 ))}
             </div>
           </section>
         ))}
       </div>
+
+      <AllergenLegend allergens={data.allergens} />
 
       <CartSheet
         upsell={data.upsell}

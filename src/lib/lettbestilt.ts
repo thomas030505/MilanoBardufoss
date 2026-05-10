@@ -206,6 +206,21 @@ export type Allergen = {
   group: string;
 };
 
+export type AllergenIndexEntry = { number: number; allergen: Allergen };
+
+export function buildAllergenIndex(allergens: Allergen[]): {
+  byCode: Map<string, AllergenIndexEntry>;
+  ordered: AllergenIndexEntry[];
+} {
+  const ordered: AllergenIndexEntry[] = allergens.map((allergen, i) => ({
+    number: i + 1,
+    allergen,
+  }));
+  const byCode = new Map<string, AllergenIndexEntry>();
+  for (const entry of ordered) byCode.set(entry.allergen.code, entry);
+  return { byCode, ordered };
+}
+
 export type UpsellConfig = {
   isActive: boolean;
   mode: string;
