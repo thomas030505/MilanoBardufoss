@@ -96,12 +96,20 @@ export default async function OrderTrackingPage({
   const isLive = !["COMPLETED", "CANCELLED", "FAILED"].includes(order.status);
   const isReady = order.status === "READY_FOR_PICKUP";
   const isComplete = order.status === "COMPLETED";
-  const eta = order.estimatedReadyAt
-    ? new Date(order.estimatedReadyAt).toLocaleTimeString("nb-NO", {
+  const etaSource = order.requestedPickupAt ?? order.estimatedReadyAt;
+  const eta = etaSource
+    ? new Date(etaSource).toLocaleTimeString("nb-NO", {
         hour: "2-digit",
         minute: "2-digit",
       })
     : null;
+  const etaLabel = order.requestedPickupAt
+    ? isReady
+      ? "Klar fra"
+      : "Henting"
+    : isReady
+    ? "Klar fra"
+    : "Klar ca.";
 
   const toneClasses: Record<Tone, { bg: string; ring: string; text: string; dot: string; gradient: string }> = {
     primary: {
@@ -213,7 +221,7 @@ export default async function OrderTrackingPage({
             {order.restaurant.trackingShowEta && eta && !isComplete && (
               <div className="text-right shrink-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {isReady ? "Klar fra" : "Klar ca."}
+                  {etaLabel}
                 </p>
                 <p className={`font-display text-2xl mt-0.5 ${t.text} tabular-nums`}>
                   {eta}
