@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
+import { NewsletterPopupMount } from "@/components/layout/NewsletterPopupMount";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -73,6 +74,7 @@ export default function RootLayout({
         <Footer />
         <Toaster richColors position="top-center" />
         <CookieBanner />
+        <NewsletterPopupMount slug={process.env.NEXT_PUBLIC_SLUG ?? "milano"} />
       </body>
     </html>
   );
