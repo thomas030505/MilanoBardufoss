@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,12 +12,14 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { ChevronLeft, Clock, Loader2 } from "lucide-react";
+import { ChevronLeft, Clock, Loader2, ShoppingBag, Utensils } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { useCart } from "@/store/cart";
 import {
   placeOrder,
+  previewAutoCoupon,
   validateCoupon,
+  type AutoPromoPreview,
   type CreateOrderInput,
   type HoursOverride,
   type Location,
@@ -46,6 +48,8 @@ export function CheckoutForm({
   const lines = useCart((s) => s.lines);
   const subtotal = useCart((s) => s.subtotal());
   const clear = useCart((s) => s.clear);
+  const orderType = useCart((s) => s.orderType);
+  const setOrderType = useCart((s) => s.setOrderType);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,6 +59,7 @@ export function CheckoutForm({
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [autoPromo, setAutoPromo] = useState<Extract<AutoPromoPreview, { applies: true }> | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"STRIPE" | "CASH">(
     STRIPE_ENABLED ? "STRIPE" : "CASH"
   );
@@ -74,7 +79,55 @@ export function CheckoutForm({
     return slot ? `Kl. ${slot.label}` : `Så fort som mulig (ca. ${prepMinutes} min)`;
   }, [pickupTime, pickupSlots, prepMinutes]);
 
-  const total = subtotal - couponDiscount;
+  const cartFingerprint = useMemo(
+    () =>
+      lines
+        .map((l) => {
+          const addonTotal = l.addons.reduce((a, x) => a + x.price, 0);
+          const lineTotal = (l.unitPrice + addonTotal) * l.quantity;
+          return `${l.productId}:${l.variantName ?? ""}:${l.quantity}:${lineTotal}`;
+        })
+        .join("|"),
+    [lines],
+  );
+
+  useEffect(() => {
+    if (couponDiscount > 0) {
+      setAutoPromo(null);
+      return;
+    }
+    if (lines.length === 0 || subtotal <= 0) {
+      setAutoPromo(null);
+      return;
+    }
+    const controller = new AbortController();
+    const cart = lines.map((l) => {
+      const addonTotal = l.addons.reduce((a, x) => a + x.price, 0);
+      return {
+        productId: l.productId,
+        quantity: l.quantity,
+        variantName: l.variantName ?? null,
+        lineTotal: (l.unitPrice + addonTotal) * l.quantity,
+      };
+    });
+    previewAutoCoupon({
+      subtotal,
+      ...(locationId ? { locationId } : {}),
+      fulfillment: "PICKUP",
+      cart,
+    })
+      .then((res) => {
+        if (controller.signal.aborted) return;
+        setAutoPromo(res.applies ? res : null);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAutoPromo(null);
+      });
+    return () => controller.abort();
+  }, [cartFingerprint, subtotal, locationId, couponDiscount, lines]);
+
+  const effectiveDiscount = couponDiscount > 0 ? couponDiscount : autoPromo?.discount ?? 0;
+  const total = subtotal - effectiveDiscount;
   const formValid =
     name.trim().length >= 1 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
@@ -120,11 +173,13 @@ export function CheckoutForm({
           notes: l.notes,
         })),
         fulfillment: "PICKUP",
+        orderType,
         customerName: name.trim(),
         customerEmail: email.trim(),
         customerPhone: phone.trim() || undefined,
         pickupNotes: pickupNotes.trim() || undefined,
-        requestedPickupAt: pickupTime !== "ASAP" ? pickupTime : undefined,
+        requestedPickupAt:
+          orderType !== "DINE_IN" && pickupTime !== "ASAP" ? pickupTime : undefined,
         couponCode: couponDiscount > 0 ? couponCode.trim().toUpperCase() : undefined,
         paymentMethod,
         locale: "nb",
@@ -164,6 +219,40 @@ export function CheckoutForm({
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div>
+          <h3 className="font-display text-lg mb-3">Hvor skal du spise?</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setOrderType("DINE_IN")}
+              aria-pressed={orderType === "DINE_IN"}
+              className={
+                "aspect-square rounded-lg border flex flex-col items-center justify-center gap-2 font-semibold transition-colors motion-safe:active:scale-[0.98] motion-safe:transition-transform " +
+                (orderType === "DINE_IN"
+                  ? "border-2 border-secondary bg-secondary/10 text-secondary"
+                  : "border-border bg-card hover:border-secondary/60 text-foreground")
+              }
+            >
+              <Utensils className="h-8 w-8" />
+              <span>Sitte i restauranten</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setOrderType("TAKEAWAY")}
+              aria-pressed={orderType === "TAKEAWAY"}
+              className={
+                "aspect-square rounded-lg border flex flex-col items-center justify-center gap-2 font-semibold transition-colors motion-safe:active:scale-[0.98] motion-safe:transition-transform " +
+                (orderType === "TAKEAWAY"
+                  ? "border-2 border-secondary bg-secondary/10 text-secondary"
+                  : "border-border bg-card hover:border-secondary/60 text-foreground")
+              }
+            >
+              <ShoppingBag className="h-8 w-8" />
+              <span>Takeaway</span>
+            </button>
+          </div>
+        </div>
+
         <div>
           <h3 className="font-display text-lg mb-1">Kontaktinformasjon</h3>
           <p className="text-xs text-muted-foreground mb-4">
@@ -210,7 +299,9 @@ export function CheckoutForm({
         </div>
 
         <div>
-          <h3 className="font-display text-lg mb-3">Henting</h3>
+          <h3 className="font-display text-lg mb-3">
+            {orderType === "DINE_IN" ? "Restaurant" : "Henting"}
+          </h3>
           {locations.length > 1 ? (
             <div className="mb-3">
               <Label className="mb-1.5 block">Velg avdeling *</Label>
@@ -264,6 +355,7 @@ export function CheckoutForm({
               Vi tar bare henting akkurat nå.
             </p>
           )}
+          {orderType !== "DINE_IN" && (
           <div className="mb-3">
             <Label htmlFor="pickup-time" className="mb-1.5 block">
               Når vil du hente?
@@ -295,6 +387,7 @@ export function CheckoutForm({
               </p>
             )}
           </div>
+          )}
           <Label htmlFor="pickup-notes">Kommentar (valgfritt)</Label>
           <Textarea
             id="pickup-notes"
@@ -397,6 +490,12 @@ export function CheckoutForm({
             <div className="flex justify-between text-secondary motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200">
               <span>Kupong</span>
               <span className="tabular-nums">-{formatMoney(couponDiscount)}</span>
+            </div>
+          )}
+          {couponDiscount === 0 && autoPromo && (
+            <div className="flex justify-between text-secondary motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200">
+              <span>Tilbud{autoPromo.coupon.displayName ? ` (${autoPromo.coupon.displayName})` : ""}</span>
+              <span className="tabular-nums">-{formatMoney(autoPromo.discount)}</span>
             </div>
           )}
           <div className="flex justify-between text-lg font-semibold pt-2 border-t border-border">
