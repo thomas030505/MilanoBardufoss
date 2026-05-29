@@ -17,16 +17,12 @@ export type CartLine = {
   notes?: string;
 };
 
-export type OrderType = "TAKEAWAY" | "DINE_IN";
-
 type CartState = {
   lines: CartLine[];
   lastAddedAt: number;
-  orderType: OrderType;
   addLine: (line: Omit<CartLine, "lineId">) => void;
   removeLine: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
-  setOrderType: (orderType: OrderType) => void;
   clear: () => void;
   subtotal: () => number;
 };
@@ -43,8 +39,6 @@ export const useCart = create<CartState>()(
     (set, get) => ({
       lines: [],
       lastAddedAt: 0,
-      orderType: "TAKEAWAY",
-      setOrderType: (orderType) => set({ orderType }),
       addLine: (line) => {
         const lineId = makeLineId(line);
         set((state) => {
@@ -73,7 +67,7 @@ export const useCart = create<CartState>()(
               ? state.lines.filter((l) => l.lineId !== lineId)
               : state.lines.map((l) => (l.lineId === lineId ? { ...l, quantity } : l)),
         })),
-      clear: () => set({ lines: [], orderType: "TAKEAWAY" }),
+      clear: () => set({ lines: [] }),
       subtotal: () =>
         get().lines.reduce((sum, l) => {
           const addonTotal = l.addons.reduce((a, x) => a + x.price, 0);

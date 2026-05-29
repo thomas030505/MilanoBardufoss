@@ -12,7 +12,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { ChevronLeft, Clock, Loader2, ShoppingBag, Utensils } from "lucide-react";
+import { ChevronLeft, Clock, Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { useCart } from "@/store/cart";
 import {
@@ -48,8 +48,6 @@ export function CheckoutForm({
   const lines = useCart((s) => s.lines);
   const subtotal = useCart((s) => s.subtotal());
   const clear = useCart((s) => s.clear);
-  const orderType = useCart((s) => s.orderType);
-  const setOrderType = useCart((s) => s.setOrderType);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -173,13 +171,12 @@ export function CheckoutForm({
           notes: l.notes,
         })),
         fulfillment: "PICKUP",
-        orderType,
+        orderType: "TAKEAWAY",
         customerName: name.trim(),
         customerEmail: email.trim(),
         customerPhone: phone.trim() || undefined,
         pickupNotes: pickupNotes.trim() || undefined,
-        requestedPickupAt:
-          orderType !== "DINE_IN" && pickupTime !== "ASAP" ? pickupTime : undefined,
+        requestedPickupAt: pickupTime !== "ASAP" ? pickupTime : undefined,
         couponCode: couponDiscount > 0 ? couponCode.trim().toUpperCase() : undefined,
         paymentMethod,
         locale: "nb",
@@ -219,40 +216,6 @@ export function CheckoutForm({
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-        <div>
-          <h3 className="font-display text-lg mb-3">Hvor skal du spise?</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setOrderType("DINE_IN")}
-              aria-pressed={orderType === "DINE_IN"}
-              className={
-                "aspect-square rounded-lg border flex flex-col items-center justify-center gap-2 font-semibold transition-colors motion-safe:active:scale-[0.98] motion-safe:transition-transform " +
-                (orderType === "DINE_IN"
-                  ? "border-2 border-secondary bg-secondary/10 text-secondary"
-                  : "border-border bg-card hover:border-secondary/60 text-foreground")
-              }
-            >
-              <Utensils className="h-8 w-8" />
-              <span>Sitte i restauranten</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setOrderType("TAKEAWAY")}
-              aria-pressed={orderType === "TAKEAWAY"}
-              className={
-                "aspect-square rounded-lg border flex flex-col items-center justify-center gap-2 font-semibold transition-colors motion-safe:active:scale-[0.98] motion-safe:transition-transform " +
-                (orderType === "TAKEAWAY"
-                  ? "border-2 border-secondary bg-secondary/10 text-secondary"
-                  : "border-border bg-card hover:border-secondary/60 text-foreground")
-              }
-            >
-              <ShoppingBag className="h-8 w-8" />
-              <span>Takeaway</span>
-            </button>
-          </div>
-        </div>
-
         <div>
           <h3 className="font-display text-lg mb-1">Kontaktinformasjon</h3>
           <p className="text-xs text-muted-foreground mb-4">
@@ -299,9 +262,7 @@ export function CheckoutForm({
         </div>
 
         <div>
-          <h3 className="font-display text-lg mb-3">
-            {orderType === "DINE_IN" ? "Restaurant" : "Henting"}
-          </h3>
+          <h3 className="font-display text-lg mb-3">Henting</h3>
           {locations.length > 1 ? (
             <div className="mb-3">
               <Label className="mb-1.5 block">Velg avdeling *</Label>
@@ -355,7 +316,6 @@ export function CheckoutForm({
               Vi tar bare henting akkurat nå.
             </p>
           )}
-          {orderType !== "DINE_IN" && (
           <div className="mb-3">
             <Label htmlFor="pickup-time" className="mb-1.5 block">
               Når vil du hente?
@@ -387,7 +347,6 @@ export function CheckoutForm({
               </p>
             )}
           </div>
-          )}
           <Label htmlFor="pickup-notes">Kommentar (valgfritt)</Label>
           <Textarea
             id="pickup-notes"

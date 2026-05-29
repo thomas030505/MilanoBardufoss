@@ -373,6 +373,52 @@ export type AutoPromoPreview =
       discount: 0;
     };
 
+// ----- Dine-in availability -----
+
+export type DineInSlot = {
+  time: string;    // "HH:mm" Europe/Oslo — display to customer
+  iso: string;     // ISO UTC — send in reservation payload unchanged
+  available: boolean;
+};
+
+export type DineInAvailability =
+  | { enabled: false; slots: [] }
+  | { enabled: true; maxPartySize: number; slots: DineInSlot[] };
+
+// ----- Reservations (table-only, no food) -----
+
+export type CreateReservationInput = {
+  locationId?: string;
+  dineInAt: string;            // ISO UTC — use slot.iso directly
+  partySize: number;           // 1..maxPartySize
+  guestName: string;
+  guestPhone?: string;
+  guestEmail?: string;
+  note?: string;
+  marketingOptIn?: boolean;
+  consentGivenAt?: string;     // ISO UTC, set if marketingOptIn=true
+  locale?: "nb" | "en";
+};
+
+export type CreateReservationResponse = {
+  reservationId: string;
+  publicToken: string;
+  orderNumber: number;
+  dineInAt: string;
+  partySize: number;
+  tableId: string | null;
+  idempotent?: boolean;
+};
+
+export type ReservationErrorCode =
+  | "NO_TABLE"
+  | "TOO_EARLY"
+  | "PARTY_TOO_LARGE"
+  | "DINE_IN_DISABLED"
+  | "LOCATION_REQUIRED"
+  | "RATE_LIMITED"
+  | "UNAUTHORIZED";
+
 // ----- Order tracking -----
 
 export type OrderStatus =
@@ -624,6 +670,142 @@ export function findDeliveryZone(
 ): DeliveryZone | null {
   const trimmed = postalCode.replace(/\s/g, "");
   return zones.find((z) => z.postalCodes.includes(trimmed)) ?? null;
+}
+
+// ============================================================================
+// Server-side helpers — used by route handlers in /app/api
+// ============================================================================
+
+export class LettBestiltError extends Error {
+  status: number;
+  code?: string;
+  body: unknown;
+  constructor(message: string, status: number, body: unknown, code?: string) {
+    super(message);
+    this.name = "LettBestiltError";
+    this.status = status;
+    this.body = body;
+    this.code = code;
+  }
+}
+
+export function extractErrorMessage(body: unknown, fallback: string): string {
+  const seen = new Set<unknown>();
+  function walk(node: unknown): string | null {
+    if (typeof node === "string") return node.trim() || null;
+    if (!node || typeof node !== "object" || seen.has(node)) return null;
+    seen.add(node);
+    const obj = node as Record<string, unknown>;
+    for (const key of ["message", "error", "detail", "title"]) {
+      const v = obj[key];
+      if (typeof v === "string" && v.trim()) return v.trim();
+    }
+    const issuesLike = (obj.issues ?? (obj.details as Record<string, unknown> | undefined)?.issues) as unknown;
+    if (Array.isArray(issuesLike)) {
+      const m = issuesLike.find((i) => i && typeof (i as { message?: unknown }).message === "string");
+      if (m) return (m as { message: string }).message;
+    }
+    for (const key of ["error", "details", "data"]) {
+      const v = obj[key];
+      if (v && typeof v === "object") {
+        const found = walk(v);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  return walk(body) ?? fallback;
+}
+
+/**
+ * Fetch available table-reservation slots for a date + party size.
+ * Quiet fallback to { enabled: false, slots: [] } on error — UI then hides
+ * the time picker. Safe: we never block other flows for this.
+ */
+export async function fetchDineInAvailabilityServer(input: {
+  date: string;            // YYYY-MM-DD
+  partySize: number;       // 1..20
+  locationId?: string;
+}): Promise<DineInAvailability> {
+  const params = new URLSearchParams({
+    slug: SLUG,
+    date: input.date,
+    partySize: String(input.partySize),
+  });
+  if (input.locationId) params.set("locationId", input.locationId);
+
+  const apiKey = process.env.LETTBESTILT_API_KEY;
+  const headers: Record<string, string> = { accept: "application/json" };
+  if (apiKey) headers["Authorization"] = `Bearer ${apiKey.trim()}`;
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/dine-in/availability?${params}`, {
+      headers,
+      cache: "no-store",
+    });
+    if (!res.ok) return { enabled: false, slots: [] };
+    const data = (await res.json()) as DineInAvailability;
+    if (!data || data.enabled !== true) return { enabled: false, slots: [] };
+    return data;
+  } catch {
+    return { enabled: false, slots: [] };
+  }
+}
+
+export async function placeReservationServer(
+  payload: CreateReservationInput,
+  opts: { idempotencyKey: string },
+): Promise<CreateReservationResponse> {
+  const apiKey = process.env.LETTBESTILT_API_KEY;
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    accept: "application/json",
+    "idempotency-key": opts.idempotencyKey,
+  };
+  if (apiKey) headers["Authorization"] = `Bearer ${apiKey.trim()}`;
+
+  const params = new URLSearchParams({ slug: SLUG });
+  const sanitized = {
+    locationId: payload.locationId ?? null,
+    dineInAt: payload.dineInAt,
+    partySize: payload.partySize,
+    guestNameLen: payload.guestName.length,
+    guestEmail: payload.guestEmail
+      ? `***@${payload.guestEmail.slice(payload.guestEmail.indexOf("@") + 1)}`
+      : null,
+    guestPhone: payload.guestPhone ? `***${payload.guestPhone.slice(-2)}` : null,
+    marketingOptIn: payload.marketingOptIn ?? false,
+  };
+  console.log("[LettBestilt] POST /reservations", {
+    slug: SLUG,
+    authPresent: !!apiKey,
+    idempotencyKey: opts.idempotencyKey,
+  });
+  console.log("[LettBestilt] reservation payload:", JSON.stringify(sanitized));
+
+  const res = await fetch(`${BASE_URL}/api/v1/reservations?${params}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const raw = await res.text().catch(() => "");
+    let body: unknown = raw;
+    try { body = raw ? JSON.parse(raw) : null; } catch { /* keep raw */ }
+    console.error("[LettBestilt] reservation failed", res.status, raw);
+    const code = (body && typeof body === "object"
+      ? (body as { code?: string; error?: { code?: string } }).code
+        ?? (body as { error?: { code?: string } }).error?.code
+      : undefined);
+    throw new LettBestiltError(
+      extractErrorMessage(body, `Reservasjon feilet (${res.status})`),
+      res.status,
+      body,
+      code,
+    );
+  }
+  return res.json();
 }
 
 /**

@@ -10,6 +10,7 @@ import { Menu } from "lucide-react";
 const NAV = [
   { href: "/", label: "Forsiden" },
   { href: "/bestill", label: "Bestill" },
+  { href: "/reserver", label: "Reserver bord" },
   { href: "/om-oss", label: "Om oss" },
   { href: "/kontakt", label: "Kontakt" },
 ];

@@ -36,6 +36,7 @@ export async function Footer() {
           </h4>
           <ul className="space-y-2 text-sm">
             <li><Link href="/bestill" className="hover:text-secondary">Bestill</Link></li>
+            <li><Link href="/reserver" className="hover:text-secondary">Reserver bord</Link></li>
             <li><Link href="/om-oss" className="hover:text-secondary">Om oss</Link></li>
             <li><Link href="/kontakt" className="hover:text-secondary">Kontakt</Link></li>
             <li className="pt-1">
