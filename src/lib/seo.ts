@@ -59,11 +59,7 @@ export function restaurantJsonLd(r: Restaurant) {
             latitude: loc.latitude,
             longitude: loc.longitude,
           }
-        : {
-            "@type": "GeoCoordinates",
-            latitude: 69.0459994,
-            longitude: 18.5086168,
-          },
+        : undefined,
     openingHoursSpecification: r.openingHours
       .filter((h) => !h.isClosed)
       .map((h) => ({
@@ -72,8 +68,10 @@ export function restaurantJsonLd(r: Restaurant) {
         opens: h.opensAt,
         closes: h.closesAt,
       })),
-    acceptsReservations: false,
+    acceptsReservations: true,
     hasMenu: `${SITE_URL}/bestill`,
+    menu: `${SITE_URL}/bestill`,
+    taxID: r.orgNumber ?? undefined,
     sameAs: r.googleReviewUrl ? [r.googleReviewUrl] : undefined,
   };
 }

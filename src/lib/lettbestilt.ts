@@ -540,6 +540,8 @@ export async function subscribeToNewsletter(input: {
   email: string;
   name?: string;
   locationId?: string;
+  consentGivenAt?: string;
+  locale?: "nb" | "en";
 }): Promise<NewsletterSignupResponse> {
   const url = new URL(`${BASE_URL}/api/v1/newsletter/signup`);
   url.searchParams.set("slug", SLUG);

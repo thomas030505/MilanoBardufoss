@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { X } from "lucide-react";
 import {
   subscribeToNewsletter,
@@ -50,6 +51,7 @@ export function NewsletterPopup({
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<NewsletterSignupResponse | null>(null);
@@ -68,12 +70,18 @@ export function NewsletterPopup({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!consent) {
+      setError("Du må samtykke før vi kan sende deg nyhetsbrev.");
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
       const data = await subscribeToNewsletter({
         email: email.trim(),
         name: name.trim() || undefined,
+        consentGivenAt: new Date().toISOString(),
+        locale: "nb",
       });
       setResult(data);
       markSeen(restaurantKey);
@@ -180,13 +188,29 @@ export function NewsletterPopup({
                 {error}
               </p>
             )}
-            <p className="text-xs text-muted-foreground">
-              Ved å melde deg på godtar du å motta markedsføring på e-post. Du kan
-              melde deg av når som helst.
-            </p>
+            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary"
+                required
+              />
+              <span>
+                Jeg samtykker til å motta markedsføring på e-post fra Milano
+                Bardufoss og har lest{" "}
+                <Link
+                  href="/personvern"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  personvernerklæringen
+                </Link>
+                . Jeg kan melde meg av når som helst.
+              </span>
+            </label>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !consent}
               className="w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
             >
               {submitting ? "Sender…" : config.ctaLabel}

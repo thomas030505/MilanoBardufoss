@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
 import { NewsletterPopupMount } from "@/components/layout/NewsletterPopupMount";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -39,6 +40,21 @@ export const metadata: Metadata = {
     title: "Milano Bardufoss — Pizza, grill og kebab",
     description:
       "Bestill pizza, grill og kebab fra Milano Bardufoss. Henting på Rustahøgdveien 16 — åpent hver dag 13–22.",
+    images: [
+      {
+        url: "/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Milano Bardufoss — pizza, grill og kebab",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Milano Bardufoss — Pizza, grill og kebab",
+    description:
+      "Bestill pizza, grill og kebab fra Milano Bardufoss. Henting på Rustahøgdveien 16 — åpent hver dag 13–22.",
+    images: ["/og.jpg"],
   },
   alternates: { canonical: SITE_URL },
   icons: {
@@ -75,6 +91,7 @@ export default function RootLayout({
         <Toaster richColors position="top-center" />
         <CookieBanner />
         <NewsletterPopupMount slug={process.env.NEXT_PUBLIC_SLUG ?? "milano"} />
+        <Analytics />
       </body>
     </html>
   );
