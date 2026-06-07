@@ -130,8 +130,7 @@ export function CheckoutForm({
     name.trim().length >= 1 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
     consent &&
-    lines.length > 0 &&
-    locationId.length > 0;
+    lines.length > 0;
 
   async function handleApplyCoupon() {
     if (!couponCode.trim()) return;
@@ -312,9 +311,16 @@ export function CheckoutForm({
               );
             })()
           ) : (
-            <p className="text-sm text-muted-foreground mb-3">
-              Vi tar bare henting akkurat nå.
-            </p>
+            <div className="mb-3 rounded-lg bg-secondary/8 border border-secondary/15 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-secondary mb-1">
+                Henting
+              </p>
+              <p className="text-sm font-medium text-foreground">Rustahøgdveien 16</p>
+              <p className="text-xs text-muted-foreground mt-0.5">9325 Bardufoss</p>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Maten står klar når du kommer.
+              </p>
+            </div>
           )}
           <div className="mb-3">
             <Label htmlFor="pickup-time" className="mb-1.5 block">

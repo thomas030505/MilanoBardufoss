@@ -28,17 +28,6 @@ export default async function OrderPage() {
     ? "Nettbestillingen er stengt — vi tar imot nye bestillinger fram til én time før stengetid."
     : null;
 
-  const primaryLocation = data.restaurant.locations[0];
-  const primaryLocationLabel = (() => {
-    if (!primaryLocation) return null;
-    const street = primaryLocation.address?.trim();
-    if (street && street.length > 1 && !/^x+$/i.test(street)) return street;
-    const cityLine = [primaryLocation.postalCode, primaryLocation.city]
-      .filter(Boolean)
-      .join(" ");
-    return cityLine || primaryLocation.name;
-  })();
-
   return (
     <div className="bg-background">
       <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/8 via-stone-100/60 to-secondary/8">

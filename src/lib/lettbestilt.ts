@@ -521,7 +521,11 @@ export async function fetchMenu(
       : { next: { revalidate: opts.revalidate ?? 60 } };
   const res = await fetch(`${BASE_URL}/api/v1/menu?slug=${SLUG}`, fetchOpts);
   if (!res.ok) throw new Error(`Menu fetch failed: ${res.status}`);
-  return res.json();
+  const data = (await res.json()) as MenuResponse;
+  if (data.restaurant && !Array.isArray(data.restaurant.locations)) {
+    data.restaurant.locations = [];
+  }
+  return data;
 }
 
 export async function fetchRestaurantLite(): Promise<RestaurantLite> {
