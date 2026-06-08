@@ -24,6 +24,11 @@ type CartState = {
   removeLine: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
   clear: () => void;
+  pruneAgainstMenu: (
+    validProductIds: Set<string>,
+    validVariantIds: Set<string>,
+    validAddonIds: Set<string>
+  ) => void;
   subtotal: () => number;
 };
 
@@ -68,6 +73,23 @@ export const useCart = create<CartState>()(
               : state.lines.map((l) => (l.lineId === lineId ? { ...l, quantity } : l)),
         })),
       clear: () => set({ lines: [] }),
+      /**
+       * Fjern handlekurv-linjer som peker til produkter, varianter eller
+       * tillegg som ikke finnes i den ferske menyen lenger. Brukes ved
+       * hydrering for å unngå "Product ... not found or unavailable" hvis
+       * menyen er rebygd og CUID-er har endret seg.
+       */
+      pruneAgainstMenu: (validProductIds, validVariantIds, validAddonIds) =>
+        set((state) => {
+          const next = state.lines.filter((l) => {
+            if (!validProductIds.has(l.productId)) return false;
+            if (l.variantId && !validVariantIds.has(l.variantId)) return false;
+            if (l.addons.some((a) => !validAddonIds.has(a.id))) return false;
+            return true;
+          });
+          if (next.length === state.lines.length) return state;
+          return { lines: next };
+        }),
       subtotal: () =>
         get().lines.reduce((sum, l) => {
           const addonTotal = l.addons.reduce((a, x) => a + x.price, 0);

@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import type { MenuResponse } from "@/lib/lettbestilt";
+import { useCart } from "@/store/cart";
 import { ProductCard } from "./ProductCard";
 import { CartSheet } from "./CartSheet";
 import { AllergenLegend } from "./AllergenLegend";
@@ -20,6 +22,40 @@ export function OrderClient({
     [data.categories]
   );
   const [activeId, setActiveId] = useState(sortedCategories[0]?.id);
+
+  // Prune kurv mot fersk meny: hvis DB-en er rebygd så CUID-ene har endret
+  // seg, vil persistert localStorage-kurv peke til døde produkter. Rydd dem
+  // bort før kunden treffer "Bestill" og får 404 fra API-et.
+  useEffect(() => {
+    const validProductIds = new Set<string>();
+    const validVariantIds = new Set<string>();
+    const validAddonIds = new Set<string>();
+    for (const g of data.restaurant.addonGroups) {
+      for (const a of g.addons) validAddonIds.add(a.id);
+    }
+    for (const c of data.categories) {
+      for (const g of c.addonGroups) {
+        for (const a of g.addons) validAddonIds.add(a.id);
+      }
+      for (const p of c.products) {
+        validProductIds.add(p.id);
+        for (const v of p.variants) validVariantIds.add(v.id);
+        for (const g of p.addonGroups) {
+          for (const a of g.addons) validAddonIds.add(a.id);
+        }
+      }
+    }
+    const before = useCart.getState().lines.length;
+    useCart
+      .getState()
+      .pruneAgainstMenu(validProductIds, validVariantIds, validAddonIds);
+    const after = useCart.getState().lines.length;
+    if (before > 0 && after < before) {
+      toast.warning(
+        "Menyen er oppdatert — noen varer i handlekurven er ikke lenger tilgjengelige og ble fjernet."
+      );
+    }
+  }, [data]);
 
   return (
     <>
