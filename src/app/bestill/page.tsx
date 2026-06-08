@@ -1,50 +1,81 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { fetchMenu } from "@/lib/lettbestilt";
+import { getRestaurantStatus, isOrderingOpen } from "@/lib/opening-hours";
+import { OrderClient } from "@/components/order/OrderClient";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Nettbestilling midlertidig nede — Milano Bardufoss",
+  title: "Bestill — Henting fra Milano Bardufoss",
   description:
-    "Nettbestillingen er midlertidig utilgjengelig. Ring oss for å bestille henting i mellomtiden.",
+    "Bestill pizza, kebab og grill til henting fra Milano Bardufoss. Maten står klar når du kommer.",
   alternates: { canonical: "/bestill" },
-  robots: { index: false, follow: false },
 };
 
-export default function OrderPage() {
+export default async function OrderPage() {
+  const data = await fetchMenu({ cache: "no-store" });
+  const status = getRestaurantStatus(
+    data.restaurant.openingHours,
+    data.restaurant.hoursOverrides
+  );
+  const orderingOpen = isOrderingOpen(
+    data.restaurant.openingHours,
+    data.restaurant.hoursOverrides
+  );
+  const closedReason = !status.isOpen
+    ? status.nextOpenLabel ?? "Vi har stengt akkurat nå."
+    : !orderingOpen
+    ? "Nettbestillingen er stengt — vi tar imot nye bestillinger fram til én time før stengetid."
+    : null;
+
   return (
     <div className="bg-background">
-      <section className="container-page py-16 sm:py-24">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3.5 py-1.5 text-sm font-semibold ring-1 ring-primary/20 mb-6">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            Midlertidig nede
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/8 via-stone-100/60 to-secondary/8">
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, var(--color-charcoal) 1px, transparent 0)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+        <div className="container-page py-8 sm:py-12 lg:py-14 relative">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="h-1 w-8 rounded-full bg-primary" />
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Bestill henting
+            </p>
           </div>
-          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground text-balance">
-            Nettbestillingen er midlertidig utilgjengelig
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground text-balance max-w-3xl">
+            Bestill henting fra Milano
           </h1>
-          <p className="mt-5 text-lg text-muted-foreground text-balance">
-            Vi har en teknisk feil og jobber med å fikse det så raskt vi kan. Beklager bryet!
+          <p className="mt-3 text-muted-foreground max-w-2xl">
+            Velg fra menyen under. Du får bekreftelse på e-post, og vi lager maten klar til
+            avtalt tid.
           </p>
-          <p className="mt-3 text-muted-foreground text-balance">
-            I mellomtiden tar vi gjerne imot bestillinger på telefon.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="tel:+4791929910"
-              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition"
-            >
-              Ring oss
-            </a>
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-base font-semibold text-foreground hover:bg-stone-100 transition"
-            >
-              Til forsiden
-            </Link>
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {orderingOpen ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-secondary/12 text-secondary px-3.5 py-1.5 text-sm font-semibold ring-1 ring-secondary/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary opacity-70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary" />
+                </span>
+                Åpen for nettbestilling
+              </span>
+            ) : (
+              closedReason && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3.5 py-1.5 text-sm font-medium ring-1 ring-primary/20">
+                  <span className="h-2 w-2 rounded-full bg-primary" />
+                  {closedReason}
+                </span>
+              )
+            )}
           </div>
         </div>
       </section>
+
+      <OrderClient data={data} orderingOpen={orderingOpen} closedReason={closedReason} />
     </div>
   );
 }
