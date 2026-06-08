@@ -512,6 +512,75 @@ export type ApiError = {
 // Read endpoints (no auth)
 // ============================================================================
 
+// Fallback brukt når LettBestilt-API-et er nede, slik at marketing-sidene
+// fortsatt rendrer med kjent restaurantinfo (åpningstider, adresse, telefon).
+// Menyen vises ikke fra fallback — produkter/priser kommer fra dashboardet.
+export const FALLBACK_MENU: MenuResponse = {
+  restaurant: {
+    id: "fallback",
+    slug: SLUG ?? "milano",
+    name: "Milano Bardufoss",
+    description:
+      "Pizza, grill og kebab i hjertet av Bardufoss. Bestill på nett, hent når du vil.",
+    cuisineType: "Pizza, kebab og grill",
+    currency: "NOK",
+    locale: "nb",
+    logoUrl: null,
+    faviconUrl: null,
+    coverImageUrl: null,
+    primaryColor: null,
+    secondaryColor: null,
+    fontFamily: null,
+    email: "Milano.fm9@gmail.com",
+    phone: "+47 91 92 99 10",
+    website: null,
+    googleReviewUrl: null,
+    orgNumber: null,
+    vatNumber: null,
+    pickupEnabled: true,
+    deliveryEnabled: false,
+    defaultPrepMinutes: 30,
+    defaultDeliveryMinutes: 45,
+    trackingHeaderText: null,
+    trackingPickupInstructions: null,
+    trackingDeliveryInstructions: null,
+    trackingShowEta: true,
+    trackingShowMap: true,
+    receiptHeaderText: null,
+    receiptFooterText: null,
+    receiptShowUpsell: false,
+    tenantDomains: [],
+    openingHours: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+      dayOfWeek,
+      opensAt: "13:00",
+      closesAt: "22:00",
+      isClosed: false,
+      locationId: null,
+    })),
+    hoursOverrides: [],
+    locations: [
+      {
+        id: "fallback-loc",
+        name: "Milano Bardufoss",
+        address: "Rustahøgdveien 16",
+        city: "Bardufoss",
+        postalCode: "9325",
+        country: "NO",
+        latitude: null,
+        longitude: null,
+        phone: "+47 91 92 99 10",
+      },
+    ],
+    deliveryZones: [],
+    addonGroups: [],
+  },
+  menus: [],
+  categories: [],
+  coupons: [],
+  allergens: [],
+  upsell: null,
+};
+
 export async function fetchMenu(
   opts: { cache?: RequestCache; revalidate?: number } = {}
 ): Promise<MenuResponse> {

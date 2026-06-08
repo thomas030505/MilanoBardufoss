@@ -1,4 +1,4 @@
-import { fetchMenu } from "@/lib/lettbestilt";
+import { fetchMenu, FALLBACK_MENU } from "@/lib/lettbestilt";
 import { getRestaurantStatus } from "@/lib/opening-hours";
 import { Hero } from "@/components/home/Hero";
 import { USPs } from "@/components/home/USPs";
@@ -12,7 +12,7 @@ import { jsonLdScript, restaurantJsonLd } from "@/lib/seo";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const data = await fetchMenu();
+  const data = await fetchMenu().catch(() => FALLBACK_MENU);
   const popular = data.categories
     .flatMap((c) => c.products)
     .filter((p) => p.isPopular)
