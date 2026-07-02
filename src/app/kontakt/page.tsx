@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Phone, MapPin, Clock, Mail } from "lucide-react";
-import { fetchMenu } from "@/lib/lettbestilt";
+import { fetchMenu, FALLBACK_MENU } from "@/lib/lettbestilt";
 import { formatOpeningHoursTable } from "@/lib/opening-hours";
+import { formatNorwegianPhoneDisplay, telHref } from "@/lib/phone";
 
 export const revalidate = 300;
 
@@ -16,11 +17,16 @@ const MAP_EMBED_SRC =
   "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2293.5!2d18.5060!3d69.046!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x45db19000dad9a07%3A0x6de6e6d1e9debbed!2sMilano!5e0!3m2!1sno!2sno";
 
 export default async function ContactPage() {
-  const data = await fetchMenu().catch(() => null);
-  const hours = data
-    ? formatOpeningHoursTable(data.restaurant.openingHours)
-    : [];
-  const email = data?.restaurant.email ?? "Milano.fm9@gmail.com";
+  // Kontaktinfo fra LettBestilt-API-et; FALLBACK_MENU (kjent adresse/telefon/
+  // åpningstider) når API-et er nede.
+  const data = await fetchMenu().catch(() => FALLBACK_MENU);
+  const hours = formatOpeningHoursTable(data.restaurant.openingHours);
+  const email = data.restaurant.email ?? FALLBACK_MENU.restaurant.email;
+  const phone = data.restaurant.phone ?? FALLBACK_MENU.restaurant.phone;
+  // API-et returnerer ikke lenger locations (avdelinger fjernet i LettBestilt);
+  // adressen kommer fra fallbacken til den ev. dukker opp i API-et igjen.
+  const loc =
+    data.restaurant.locations[0] ?? FALLBACK_MENU.restaurant.locations[0];
 
   return (
     <div className="bg-background">
@@ -47,10 +53,10 @@ export default async function ContactPage() {
               label="Telefon"
               value={
                 <a
-                  href="tel:+4791929910"
+                  href={telHref(phone)}
                   className="text-2xl font-display text-foreground hover:text-secondary"
                 >
-                  91 92 99 10
+                  {formatNorwegianPhoneDisplay(phone)}
                 </a>
               }
             />
@@ -59,8 +65,10 @@ export default async function ContactPage() {
               label="Adresse"
               value={
                 <div className="text-foreground">
-                  <div className="font-medium">Rustahøgdveien 16</div>
-                  <div className="text-muted-foreground">9325 Bardufoss</div>
+                  <div className="font-medium">{loc.address}</div>
+                  <div className="text-muted-foreground">
+                    {loc.postalCode} {loc.city}
+                  </div>
                 </div>
               }
             />

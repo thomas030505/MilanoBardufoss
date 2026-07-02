@@ -1,18 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
-import { fetchMenu } from "@/lib/lettbestilt";
+import { fetchMenu, FALLBACK_MENU } from "@/lib/lettbestilt";
 import { formatOpeningHoursTable } from "@/lib/opening-hours";
+import { formatNorwegianPhoneDisplay, telHref } from "@/lib/phone";
 
 export async function Footer() {
-  let orgNumber: string | null = null;
-  let hours: ReturnType<typeof formatOpeningHoursTable> = [];
+  // Kontaktinfo fra LettBestilt-API-et; FALLBACK_MENU (kjent adresse/telefon/
+  // åpningstider) når API-et er nede. Fail open — footeren rendrer alltid.
+  let restaurant = FALLBACK_MENU.restaurant;
   try {
     const data = await fetchMenu({ cache: "no-store" });
-    orgNumber = data.restaurant.orgNumber;
-    hours = formatOpeningHoursTable(data.restaurant.openingHours);
+    restaurant = data.restaurant;
   } catch {
-    // Fail open — footer renders without dynamic data
+    // Fail open — footer renders with fallback data
   }
+  const orgNumber = restaurant.orgNumber;
+  const hours = formatOpeningHoursTable(restaurant.openingHours);
+  // API-et returnerer ikke lenger locations (avdelinger fjernet i LettBestilt);
+  // adressen kommer fra fallbacken til den ev. dukker opp i API-et igjen.
+  const loc = restaurant.locations[0] ?? FALLBACK_MENU.restaurant.locations[0];
+  const phone = restaurant.phone ?? FALLBACK_MENU.restaurant.phone;
 
   return (
     <footer className="mt-24 border-t border-border bg-stone-100 text-foreground">
@@ -26,7 +33,7 @@ export async function Footer() {
             className="h-12 w-auto"
           />
           <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-            Pizza, grill og kebab i Rustahøgdveien 16, Bardufoss.
+            Pizza, grill og kebab i {loc.address}, {loc.city}.
           </p>
         </div>
 
@@ -58,11 +65,13 @@ export async function Footer() {
             Besøk oss
           </h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>Rustahøgdveien 16</li>
-            <li>9325 Bardufoss</li>
+            <li>{loc.address}</li>
             <li>
-              <a href="tel:+4791929910" className="hover:text-secondary">
-                91 92 99 10
+              {loc.postalCode} {loc.city}
+            </li>
+            <li>
+              <a href={telHref(phone)} className="hover:text-secondary">
+                {formatNorwegianPhoneDisplay(phone)}
               </a>
             </li>
           </ul>
