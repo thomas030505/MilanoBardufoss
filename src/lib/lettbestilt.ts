@@ -126,6 +126,14 @@ export type Location = {
   phone: string | null;
 };
 
+// Betalingsmåter eieren har aktivert i LettBestilt-dashbordet. Kassen skal
+// KUN rendre metodene som er true her — aldri en hardkodet liste.
+export type PaymentAvailability = {
+  card: boolean;   // Stripe (kort på nett)
+  vipps: boolean;  // Vipps ePayment
+  cash: boolean;   // betal ved henting
+};
+
 export type DeliveryZone = {
   id: string;
   name: string;
@@ -163,6 +171,8 @@ export type Restaurant = {
   deliveryEnabled: boolean;
   defaultPrepMinutes: number;
   defaultDeliveryMinutes: number;
+  // Payment methods (fra /api/v1/restaurant og /api/v1/menu)
+  payment: PaymentAvailability;
   // Tracking
   trackingHeaderText: string | null;
   trackingPickupInstructions: string | null;
@@ -267,6 +277,7 @@ export type RestaurantLite = Pick<
   | "deliveryEnabled"
   | "defaultPrepMinutes"
   | "defaultDeliveryMinutes"
+  | "payment"
 > & {
   // Returneres KUN når popupen er aktivert i dashboardet og koblet til en aktiv
   // kupong. Når null/missing: ikke render popupen — restauranten har slått den av.
@@ -548,6 +559,8 @@ export const FALLBACK_MENU: MenuResponse = {
     deliveryEnabled: false,
     defaultPrepMinutes: 30,
     defaultDeliveryMinutes: 45,
+    // Trygg fallback når API-et er nede: kun kontant (matcher prod-oppsettet).
+    payment: { card: false, vipps: false, cash: true },
     trackingHeaderText: null,
     trackingPickupInstructions: null,
     trackingDeliveryInstructions: null,
@@ -600,6 +613,11 @@ export async function fetchMenu(
   const data = (await res.json()) as MenuResponse;
   if (data.restaurant && !Array.isArray(data.restaurant.locations)) {
     data.restaurant.locations = [];
+  }
+  // Tål at API-et skulle mangle payment-objektet: fall tilbake til kun
+  // kontant i stedet for å krasje kassen.
+  if (data.restaurant && typeof data.restaurant.payment?.cash !== "boolean") {
+    data.restaurant.payment = { card: false, vipps: false, cash: true };
   }
   return data;
 }

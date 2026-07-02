@@ -19,8 +19,10 @@ npm run dev
 | `NEXT_PUBLIC_LETTBESTILT_URL` | `https://lettbestilt.no` | klient + server |
 | `NEXT_PUBLIC_SLUG` | `milano` | klient + server |
 | `NEXT_PUBLIC_SITE_URL` | `https://milanobardufoss.no` | klient + server (SEO/canonical) |
-| `NEXT_PUBLIC_STRIPE_ENABLED` | `true` eller `false` | klient |
 | `LETTBESTILT_API_KEY` | (valgfritt) | server only — kun fallback |
+
+Betalingsmåtene i kassen styres av `restaurant.payment` fra LettBestilt-API-et
+(av/på i dashbordet) — ikke av env-variabler.
 
 ## Deploy
 

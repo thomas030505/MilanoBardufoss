@@ -13,7 +13,13 @@ import { formatMoney } from "@/lib/money";
 import { useCart } from "@/store/cart";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CheckoutForm } from "./CheckoutForm";
-import type { HoursOverride, Location, OpeningHour, UpsellConfig } from "@/lib/lettbestilt";
+import type {
+  HoursOverride,
+  Location,
+  OpeningHour,
+  PaymentAvailability,
+  UpsellConfig,
+} from "@/lib/lettbestilt";
 
 function useHasMounted(): boolean {
   return useSyncExternalStore(
@@ -31,6 +37,7 @@ export function CartSheet({
   openingHours,
   hoursOverrides,
   prepMinutes,
+  payment,
 }: {
   upsell: UpsellConfig | null;
   orderingOpen: boolean;
@@ -39,6 +46,7 @@ export function CartSheet({
   openingHours: OpeningHour[];
   hoursOverrides: HoursOverride[];
   prepMinutes: number;
+  payment: PaymentAvailability;
 }) {
   const lines = useCart((s) => s.lines);
   const subtotal = useCart((s) => s.subtotal());
@@ -271,6 +279,7 @@ export function CartSheet({
             openingHours={openingHours}
             hoursOverrides={hoursOverrides}
             prepMinutes={prepMinutes}
+            payment={payment}
           />
         )}
       </SheetContent>
