@@ -1,4 +1,5 @@
 import { type NextRequest } from "next/server";
+import { isLikelyCampaignId } from "@/lib/attribution";
 
 const BASE_URL = process.env.NEXT_PUBLIC_LETTBESTILT_URL ?? "https://lettbestilt.no";
 const SLUG = process.env.NEXT_PUBLIC_SLUG!;
@@ -29,19 +30,33 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.text();
-  if (body.length > MAX_BODY_BYTES) {
+  const rawBody = await request.text();
+  if (rawBody.length > MAX_BODY_BYTES) {
     return Response.json(
       { error: { code: "PAYLOAD_TOO_LARGE", message: "Request body exceeds limit" } },
       { status: 413 }
     );
   }
+  let parsed: unknown;
   try {
-    JSON.parse(body);
+    parsed = JSON.parse(rawBody);
   } catch {
     return Response.json(
       { error: { code: "INVALID_JSON", message: "Request body is not valid JSON" } },
       { status: 400 }
+    );
+  }
+
+  // Kampanje-attribusjon: LettBestilt validerer `attributionCampaignId` med
+  // z.string().cuid() — en tuklet/ugyldig verdi gir 422 og BLOKKERER kjøpet.
+  // Forward derfor kun en cuid-formet id; alt annet droppes stille.
+  let body = rawBody;
+  if (parsed && typeof parsed === "object" && "attributionCampaignId" in parsed) {
+    const { attributionCampaignId, ...rest } = parsed as Record<string, unknown>;
+    body = JSON.stringify(
+      isLikelyCampaignId(attributionCampaignId)
+        ? { ...rest, attributionCampaignId }
+        : rest
     );
   }
 

@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { DineInAvailability, DineInSlot } from "@/lib/lettbestilt";
+import { useAttributionStore } from "@/store/attribution";
 import { toE164Norwegian, formatNorwegianPhoneDisplay, telHref } from "@/lib/phone";
 
 type Props = {
@@ -173,6 +174,10 @@ export function ReserverClient({ restaurantPhone, locationId }: Props) {
     setSubmitting(true);
     try {
       const phoneE164 = toE164Norwegian(phone);
+      // Kampanje-attribusjon: lest ved submit så TTL-en vurderes i
+      // bestillingsøyeblikket. null → feltet utelates helt fra payloaden.
+      const attributedCampaignId =
+        useAttributionStore.getState().getValidCampaignId() ?? undefined;
       const body = {
         locationId,
         dineInAt: selectedSlot.iso,
@@ -184,6 +189,7 @@ export function ReserverClient({ restaurantPhone, locationId }: Props) {
         marketingOptIn: marketingOptIn || undefined,
         consentGivenAt: marketingOptIn ? new Date().toISOString() : undefined,
         locale: "nb" as const,
+        ...(attributedCampaignId ? { attributedCampaignId } : {}),
       };
       const res = await fetch("/api/reservations", {
         method: "POST",

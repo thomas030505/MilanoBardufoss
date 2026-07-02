@@ -52,7 +52,11 @@ export default async function HomePage() {
       <Gallery />
       <AboutTeaser />
       <ReviewsSlider />
-      <LocationBlock openingHours={data.restaurant.openingHours} />
+      <LocationBlock
+        openingHours={data.restaurant.openingHours}
+        location={data.restaurant.locations[0] ?? null}
+        phone={data.restaurant.phone}
+      />
     </>
   );
 }

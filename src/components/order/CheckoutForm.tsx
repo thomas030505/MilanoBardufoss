@@ -24,11 +24,26 @@ import {
   type HoursOverride,
   type Location,
   type OpeningHour,
+  type PaymentAvailability,
 } from "@/lib/lettbestilt";
 import { getPickupTimeSlots } from "@/lib/opening-hours";
+import { useAttributionStore } from "@/store/attribution";
 import { toast } from "sonner";
 
-const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
+type PaymentMethod = "STRIPE" | "VIPPS" | "CASH";
+
+// Kassen rendrer KUN betalingsmåtene restauranten har aktivert i
+// LettBestilt-dashbordet (restaurant.payment fra API-et) — aldri en
+// hardkodet liste. Serveren avviser uansett avskrudde metoder (400).
+function enabledMethods(payment: PaymentAvailability): PaymentMethod[] {
+  const methods: PaymentMethod[] = [];
+  if (payment.card) methods.push("STRIPE");
+  if (payment.vipps) methods.push("VIPPS");
+  if (payment.cash) methods.push("CASH");
+  // Defensivt: plattformen håndhever minst én aktiv metode, men skulle
+  // payloaden mangle alt, vis kontant i stedet for en tom kasse.
+  return methods.length > 0 ? methods : ["CASH"];
+}
 
 export function CheckoutForm({
   onBack,
@@ -37,6 +52,7 @@ export function CheckoutForm({
   openingHours,
   hoursOverrides,
   prepMinutes,
+  payment,
 }: {
   onBack: () => void;
   onClose: () => void;
@@ -44,6 +60,7 @@ export function CheckoutForm({
   openingHours: OpeningHour[];
   hoursOverrides: HoursOverride[];
   prepMinutes: number;
+  payment: PaymentAvailability;
 }) {
   const lines = useCart((s) => s.lines);
   const subtotal = useCart((s) => s.subtotal());
@@ -58,8 +75,9 @@ export function CheckoutForm({
   const [couponError, setCouponError] = useState<string | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [autoPromo, setAutoPromo] = useState<Extract<AutoPromoPreview, { applies: true }> | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"STRIPE" | "CASH">(
-    STRIPE_ENABLED ? "STRIPE" : "CASH"
+  const availableMethods = useMemo(() => enabledMethods(payment), [payment]);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    availableMethods[0]
   );
   const [submitting, setSubmitting] = useState(false);
   const [consent, setConsent] = useState(false);
@@ -160,6 +178,10 @@ export function CheckoutForm({
     if (!formValid || submitting) return;
     setSubmitting(true);
     try {
+      // Kampanje-attribusjon: lest ved submit (ikke render) så TTL-en vurderes
+      // i kjøpsøyeblikket. null → feltet utelates helt fra payloaden.
+      const attributionCampaignId =
+        useAttributionStore.getState().getValidCampaignId() ?? undefined;
       const payload: CreateOrderInput = {
         locationId: locationId || undefined,
         items: lines.map((l) => ({
@@ -180,12 +202,15 @@ export function CheckoutForm({
         paymentMethod,
         locale: "nb",
         consentGivenAt: new Date().toISOString(),
+        ...(attributionCampaignId ? { attributionCampaignId } : {}),
       };
       const res = await placeOrder(payload, window.location.origin);
       clear();
       onClose();
       if ("stripeUrl" in res) {
         window.location.href = res.stripeUrl;
+      } else if ("vippsUrl" in res) {
+        window.location.href = res.vippsUrl;
       } else {
         window.location.href = `/order/${res.publicToken}`;
       }
@@ -399,10 +424,10 @@ export function CheckoutForm({
           <h3 className="font-display text-lg mb-3">Betaling</h3>
           <RadioGroup
             value={paymentMethod}
-            onValueChange={(v) => setPaymentMethod(v as "STRIPE" | "CASH")}
+            onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
             className="space-y-2"
           >
-            {STRIPE_ENABLED && (
+            {availableMethods.includes("STRIPE") && (
               <Label
                 htmlFor="pay-stripe"
                 className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:border-secondary has-[:checked]:border-secondary has-[:checked]:bg-secondary/5"
@@ -416,18 +441,34 @@ export function CheckoutForm({
                 </div>
               </Label>
             )}
-            <Label
-              htmlFor="pay-cash"
-              className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:border-secondary has-[:checked]:border-secondary has-[:checked]:bg-secondary/5"
-            >
-              <RadioGroupItem id="pay-cash" value="CASH" />
-              <div className="flex-1">
-                <div className="font-medium">Betal ved henting</div>
-                <div className="text-xs text-muted-foreground">
-                  Kontant eller kort i restauranten.
+            {availableMethods.includes("VIPPS") && (
+              <Label
+                htmlFor="pay-vipps"
+                className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:border-secondary has-[:checked]:border-secondary has-[:checked]:bg-secondary/5"
+              >
+                <RadioGroupItem id="pay-vipps" value="VIPPS" />
+                <div className="flex-1">
+                  <div className="font-medium">Vipps</div>
+                  <div className="text-xs text-muted-foreground">
+                    Betal enkelt med Vipps.
+                  </div>
                 </div>
-              </div>
-            </Label>
+              </Label>
+            )}
+            {availableMethods.includes("CASH") && (
+              <Label
+                htmlFor="pay-cash"
+                className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:border-secondary has-[:checked]:border-secondary has-[:checked]:bg-secondary/5"
+              >
+                <RadioGroupItem id="pay-cash" value="CASH" />
+                <div className="flex-1">
+                  <div className="font-medium">Betal ved henting</div>
+                  <div className="text-xs text-muted-foreground">
+                    Kontant eller kort i restauranten.
+                  </div>
+                </div>
+              </Label>
+            )}
           </RadioGroup>
         </div>
 
@@ -483,7 +524,7 @@ export function CheckoutForm({
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sender bestilling …
             </>
-          ) : paymentMethod === "STRIPE" ? (
+          ) : paymentMethod !== "CASH" ? (
             `Gå til betaling — ${formatMoney(total)}`
           ) : (
             `Bekreft bestilling — ${formatMoney(total)}`

@@ -5,6 +5,7 @@ import {
   LettBestiltError,
   type CreateReservationInput,
 } from "@/lib/lettbestilt";
+import { isLikelyCampaignId } from "@/lib/attribution";
 
 const ReservationSchema = z.object({
   locationId: z.string().optional(),
@@ -17,6 +18,7 @@ const ReservationSchema = z.object({
   marketingOptIn: z.boolean().optional(),
   consentGivenAt: z.string().datetime().optional(),
   locale: z.enum(["nb", "en"]).optional(),
+  attributedCampaignId: z.string().trim().max(64).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -39,8 +41,16 @@ export async function POST(req: NextRequest) {
     req.headers.get("idempotency-key") ?? req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
 
   try {
+    // Kampanje-attribusjon: LettBestilt validerer `attributedCampaignId` med
+    // z.string().cuid() — en tuklet/ugyldig verdi ville gitt 422 og BLOKKERT
+    // reservasjonen. Forward kun en cuid-formet id; alt annet droppes stille.
+    const { attributedCampaignId, ...rest } = parsed.data;
+    const payload = {
+      ...rest,
+      ...(isLikelyCampaignId(attributedCampaignId) ? { attributedCampaignId } : {}),
+    };
     const result = await placeReservationServer(
-      parsed.data as CreateReservationInput,
+      payload as CreateReservationInput,
       { idempotencyKey },
     );
     return NextResponse.json(result);
