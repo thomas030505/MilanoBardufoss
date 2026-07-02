@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
+import { AttributionCapture } from "@/components/AttributionCapture";
 import { NewsletterPopupMount } from "@/components/layout/NewsletterPopupMount";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
@@ -89,6 +90,7 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster richColors position="top-center" />
+        <AttributionCapture />
         <CookieBanner />
         <NewsletterPopupMount slug={process.env.NEXT_PUBLIC_SLUG ?? "milano"} />
         <Analytics />

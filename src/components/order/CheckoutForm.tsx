@@ -26,6 +26,7 @@ import {
   type OpeningHour,
 } from "@/lib/lettbestilt";
 import { getPickupTimeSlots } from "@/lib/opening-hours";
+import { useAttributionStore } from "@/store/attribution";
 import { toast } from "sonner";
 
 const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
@@ -160,6 +161,10 @@ export function CheckoutForm({
     if (!formValid || submitting) return;
     setSubmitting(true);
     try {
+      // Kampanje-attribusjon: lest ved submit (ikke render) så TTL-en vurderes
+      // i kjøpsøyeblikket. null → feltet utelates helt fra payloaden.
+      const attributionCampaignId =
+        useAttributionStore.getState().getValidCampaignId() ?? undefined;
       const payload: CreateOrderInput = {
         locationId: locationId || undefined,
         items: lines.map((l) => ({
@@ -180,6 +185,7 @@ export function CheckoutForm({
         paymentMethod,
         locale: "nb",
         consentGivenAt: new Date().toISOString(),
+        ...(attributionCampaignId ? { attributionCampaignId } : {}),
       };
       const res = await placeOrder(payload, window.location.origin);
       clear();

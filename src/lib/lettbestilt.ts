@@ -319,14 +319,18 @@ export type CreateOrderInput = {
   pickupNotes?: string;
   requestedPickupAt?: string;
   couponCode?: string;
-  paymentMethod: "STRIPE" | "CASH";
+  paymentMethod: "STRIPE" | "CASH" | "VIPPS";
   locale?: "nb" | "en";
   consentGivenAt?: string;
+  // Kampanje-attribusjon: cuid fra ?lb_campaign-lenke (LettBestilt-e-post).
+  // Valideres i proxy-routen — ugyldig verdi droppes stille.
+  attributionCampaignId?: string;
 };
 
 export type CreateOrderResponse =
   | { orderId: string; publicToken: string }
-  | { orderId: string; publicToken: string; stripeUrl: string };
+  | { orderId: string; publicToken: string; stripeUrl: string }
+  | { orderId: string; publicToken: string; vippsUrl: string };
 
 // ----- Coupon validation -----
 
@@ -398,6 +402,9 @@ export type CreateReservationInput = {
   marketingOptIn?: boolean;
   consentGivenAt?: string;     // ISO UTC, set if marketingOptIn=true
   locale?: "nb" | "en";
+  // Kampanje-attribusjon (NB: reservasjons-API-et bruker "attributed…", ikke
+  // "attribution…"). Valideres i proxy-routen — ugyldig verdi droppes stille.
+  attributedCampaignId?: string;
 };
 
 export type CreateReservationResponse = {
