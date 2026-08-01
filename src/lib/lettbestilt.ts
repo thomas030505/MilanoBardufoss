@@ -14,7 +14,9 @@
  *   (b) a Bearer API key in the Authorization header.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_LETTBESTILT_URL ?? "https://lettbestilt.no";
+// MÅ være www: apex (lettbestilt.no) 307-redirecter til www, og en redirect
+// stripper Authorization-headeren — lesekallene under ville da fått 401.
+const BASE_URL = process.env.NEXT_PUBLIC_LETTBESTILT_URL ?? "https://www.lettbestilt.no";
 const SLUG = process.env.NEXT_PUBLIC_SLUG!;
 
 // ============================================================================
@@ -601,13 +603,25 @@ export const FALLBACK_MENU: MenuResponse = {
   upsell: null,
 };
 
+/**
+ * Authorization-header for LESE-kall (/menu, /restaurant). Kjører kun på
+ * server — LETTBESTILT_API_KEY er bevisst ikke NEXT_PUBLIC_, så nøkkelen havner
+ * aldri i klient-bundelen. Er nøkkelen ikke satt, sendes ingen header og kallet
+ * faller tilbake på origin-allowlisten hos LettBestilt.
+ */
+function readAuthHeaders(): Record<string, string> {
+  if (typeof window !== "undefined") return {};
+  const apiKey = process.env.LETTBESTILT_API_KEY;
+  return apiKey ? { Authorization: `Bearer ${apiKey.trim()}` } : {};
+}
+
 export async function fetchMenu(
   opts: { cache?: RequestCache; revalidate?: number } = {}
 ): Promise<MenuResponse> {
   const fetchOpts: RequestInit =
     opts.cache === "no-store"
-      ? { cache: "no-store" }
-      : { next: { revalidate: opts.revalidate ?? 60 } };
+      ? { cache: "no-store", headers: readAuthHeaders() }
+      : { next: { revalidate: opts.revalidate ?? 60 }, headers: readAuthHeaders() };
   const res = await fetch(`${BASE_URL}/api/v1/menu?slug=${SLUG}`, fetchOpts);
   if (!res.ok) throw new Error(`Menu fetch failed: ${res.status}`);
   const data = (await res.json()) as MenuResponse;
@@ -625,6 +639,7 @@ export async function fetchMenu(
 export async function fetchRestaurantLite(): Promise<RestaurantLite> {
   const res = await fetch(`${BASE_URL}/api/v1/restaurant?slug=${SLUG}`, {
     next: { revalidate: 300 },
+    headers: readAuthHeaders(),
   });
   if (!res.ok) throw new Error(`Restaurant fetch failed: ${res.status}`);
   const data = await res.json();
