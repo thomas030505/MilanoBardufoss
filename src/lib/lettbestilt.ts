@@ -128,6 +128,51 @@ export type Location = {
   phone: string | null;
 };
 
+/**
+ * Restaurantens besøksadresse slik LettBestilt returnerer den (august 2026).
+ * `null` når restauranten ikke har oppgitt gateadresse — API-et sender aldri
+ * et objekt med tomme felt, nettopp så `address ?? FALLBACK` virker.
+ * `latitude`/`longitude` er begge satt eller begge null.
+ */
+export type PublicAddress = {
+  line1: string;
+  postalCode: string | null;
+  city: string | null;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+/**
+ * Adapter fra API-ets flate `address` til denne sidens interne Location-form.
+ *
+ * LettBestilt fjernet avdelinger og eksponerer nå én besøksadresse per
+ * restaurant, ikke et `locations[]`. Vi beholder Location internt fordi hele
+ * siden (footer, kontakt, JSON-LD, hentekart) allerede leser den formen —
+ * bakoverkompatibiliteten hører hjemme her, ikke i den offentlige kontrakten.
+ *
+ * `id: ""` med vilje: det finnes ingen location-id lenger, og checkouten
+ * sender `locationId: locationId || undefined` — en oppdiktet id ville blitt
+ * sendt til serveren, som stille ignorerer den.
+ */
+export function locationFromAddress(
+  address: PublicAddress | null | undefined,
+  restaurant: { name: string; phone: string | null }
+): Location | null {
+  if (!address?.line1) return null;
+  return {
+    id: "",
+    name: restaurant.name,
+    address: address.line1,
+    city: address.city ?? "",
+    postalCode: address.postalCode ?? "",
+    country: address.country ?? "NO",
+    latitude: address.latitude,
+    longitude: address.longitude,
+    phone: restaurant.phone,
+  };
+}
+
 // Betalingsmåter eieren har aktivert i LettBestilt-dashbordet. Kassen skal
 // KUN rendre metodene som er true her — aldri en hardkodet liste.
 export type PaymentAvailability = {
@@ -187,6 +232,9 @@ export type Restaurant = {
   receiptShowUpsell: boolean;
   // Domains
   tenantDomains: Array<{ domain: string; isPrimary: boolean }>;
+  // Besøksadresse (LettBestilt august 2026). `locations` beholdes som intern
+  // form og utledes fra `address` i fetchMenu — se locationFromAddress.
+  address: PublicAddress | null;
   // Schedule + locations
   openingHours: OpeningHour[];
   hoursOverrides: HoursOverride[];
@@ -275,6 +323,7 @@ export type RestaurantLite = Pick<
   | "phone"
   | "website"
   | "googleReviewUrl"
+  | "address"
   | "pickupEnabled"
   | "deliveryEnabled"
   | "defaultPrepMinutes"
@@ -496,6 +545,8 @@ export type OrderTracking = {
     trackingDeliveryInstructions: string | null;
     trackingShowEta: boolean;
     trackingShowMap: boolean;
+    // Hentestedet. Utledes til `location` under i fetchOrder.
+    address: PublicAddress | null;
   };
   location: Pick<
     Location,
@@ -571,6 +622,16 @@ export const FALLBACK_MENU: MenuResponse = {
     receiptHeaderText: null,
     receiptFooterText: null,
     receiptShowUpsell: false,
+    // Speiler locations[0] under. Beholdes til besøksadressen er fylt ut i
+    // dashbordet — da vinner API-dataene og denne brukes ikke.
+    address: {
+      line1: "Rustahøgdveien 16",
+      postalCode: "9325",
+      city: "Bardufoss",
+      country: "NO",
+      latitude: null,
+      longitude: null,
+    },
     tenantDomains: [],
     openingHours: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
       dayOfWeek,
@@ -626,7 +687,12 @@ export async function fetchMenu(
   if (!res.ok) throw new Error(`Menu fetch failed: ${res.status}`);
   const data = (await res.json()) as MenuResponse;
   if (data.restaurant && !Array.isArray(data.restaurant.locations)) {
-    data.restaurant.locations = [];
+    // API-et returnerer ikke locations[] lenger. Utled den fra besøksadressen
+    // så footer, kontaktside, JSON-LD og hentekart får ekte data; er adressen
+    // ikke fylt ut i dashbordet blir dette [] og siden faller tilbake på
+    // FALLBACK_MENU som før.
+    const synthesized = locationFromAddress(data.restaurant.address, data.restaurant);
+    data.restaurant.locations = synthesized ? [synthesized] : [];
   }
   // Tål at API-et skulle mangle payment-objektet: fall tilbake til kun
   // kontant i stedet for å krasje kassen.
@@ -677,7 +743,14 @@ export async function fetchOrder(token: string): Promise<OrderTracking> {
   });
   if (!res.ok) throw new Error(`Order fetch failed: ${res.status}`);
   const data = await res.json();
-  return data.order;
+  const order = data.order as OrderTracking;
+  // Hentestedet ligger nå på order.restaurant.address. Sporingssiden leser
+  // fortsatt order.location, så vi utleder den her — uten dette er kartet på
+  // sporingssiden dødt uansett hva trackingShowMap står på.
+  if (order?.restaurant && !order.location) {
+    order.location = locationFromAddress(order.restaurant.address, order.restaurant);
+  }
+  return order;
 }
 
 // ============================================================================
