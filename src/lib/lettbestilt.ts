@@ -384,6 +384,11 @@ export type CreateOrderInput = {
   paymentMethod: "STRIPE" | "CASH" | "VIPPS";
   locale?: "nb" | "en";
   consentGivenAt?: string;
+  // Nyhetsbrev-samtykke huket av i kassen. true → LettBestilt lagrer kunden som
+  // MarketingSubscriber med source=CHECKOUT i samme transaksjon som ordren
+  // (consentGivenAt + hashet IP settes server-side). Separat fra feltet over,
+  // som dekker den transaksjonelle behandlingen av bestillingen.
+  marketingOptIn?: boolean;
   // Kampanje-attribusjon: cuid fra ?lb_campaign-lenke (LettBestilt-e-post).
   // Valideres i proxy-routen — ugyldig verdi droppes stille.
   attributionCampaignId?: string;
