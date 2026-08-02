@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +82,9 @@ export function CheckoutForm({
   );
   const [submitting, setSubmitting] = useState(false);
   const [consent, setConsent] = useState(false);
+  // Nyhetsbrev: alltid av som utgangspunkt (GDPR — ingen forhåndsavkrysning),
+  // og aldri koblet til `consent`, som gjelder selve bestillingen.
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [locationId, setLocationId] = useState<string>(locations[0]?.id ?? "");
   const [pickupTime, setPickupTime] = useState<string>("ASAP");
 
@@ -202,6 +206,8 @@ export function CheckoutForm({
         paymentMethod,
         locale: "nb",
         consentGivenAt: new Date().toISOString(),
+        // Utelates når boksen ikke er huket av — da lagres ingen abonnent.
+        ...(marketingOptIn ? { marketingOptIn: true } : {}),
         ...(attributionCampaignId ? { attributionCampaignId } : {}),
       };
       const res = await placeOrder(payload, window.location.origin);
@@ -472,18 +478,40 @@ export function CheckoutForm({
           </RadioGroup>
         </div>
 
-        <Label className="flex items-start gap-3 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-            className="mt-1 h-4 w-4 accent-secondary"
-          />
-          <span className="text-muted-foreground">
-            Jeg godtar at Milano Bardufoss behandler mine kontaktopplysninger for å levere
-            denne bestillingen.
-          </span>
-        </Label>
+        <div className="space-y-3">
+          <Label className="flex items-start gap-3 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-secondary"
+            />
+            <span className="text-muted-foreground">
+              Jeg godtar at Milano Bardufoss behandler mine kontaktopplysninger for å levere
+              denne bestillingen.
+            </span>
+          </Label>
+          <Label className="flex items-start gap-3 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-secondary"
+            />
+            <span className="text-muted-foreground">
+              Ja takk, jeg vil ha nyheter og tilbud fra Milano Bardufoss på e-post. Du kan
+              melde deg av når som helst — se{" "}
+              <Link
+                href="/personvern"
+                target="_blank"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                personvernerklæringen
+              </Link>
+              .
+            </span>
+          </Label>
+        </div>
       </div>
 
       <div className="border-t border-border px-6 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-3 bg-stone-100/60">
