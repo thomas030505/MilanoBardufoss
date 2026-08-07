@@ -46,6 +46,7 @@ export async function Footer() {
             <li><Link href="/reserver" className="hover:text-secondary">Reserver bord</Link></li>
             <li><Link href="/om-oss" className="hover:text-secondary">Om oss</Link></li>
             <li><Link href="/kontakt" className="hover:text-secondary">Kontakt</Link></li>
+            <li><Link href="/vilkar" className="hover:text-secondary">Vilkår</Link></li>
             <li><Link href="/personvern" className="hover:text-secondary">Personvern</Link></li>
             <li className="pt-1">
               <a

@@ -122,16 +122,16 @@ export default async function PersonvernPage() {
         <Section title="Hvem vi deler data med">
           <ul className="list-disc pl-5 space-y-2">
             <li>
-              <strong>LettBestilt</strong> (Tace IT AS) er vår databehandler og
-              leverer bestillings-, reservasjons- og nyhetsbrev-systemet.
+              <strong>LettBestilt AS</strong> er vår databehandler og leverer
+              bestillings-, reservasjons- og nyhetsbrev-systemet.
             </li>
             <li>
               <strong>Vercel Inc.</strong> hoster nettsiden og leverer cookie-fri,
               anonymisert besøksstatistikk.
             </li>
             <li>
-              <strong>Stripe</strong> behandler kortbetalinger hvis du betaler på
-              nett. Stripe er selvstendig behandlingsansvarlig for betalingsdataene.
+              <strong>SagaPay</strong> behandler betalinger hvis du betaler på nett.
+              SagaPay er selvstendig behandlingsansvarlig for betalingsdataene.
             </li>
           </ul>
           <p>
