@@ -50,7 +50,7 @@ export async function Footer() {
             <li><Link href="/personvern" className="hover:text-secondary">Personvern</Link></li>
             <li className="pt-1">
               <a
-                href="https://lettbestilt.no"
+                href="https://www.lettbestilt.no"
                 className="text-muted-foreground hover:text-secondary"
                 target="_blank"
                 rel="noreferrer"
@@ -109,7 +109,7 @@ export async function Footer() {
           <p>
             Drevet av{" "}
             <a
-              href="https://lettbestilt.no"
+              href="https://www.lettbestilt.no"
               className="hover:text-secondary"
               target="_blank"
               rel="noreferrer"
